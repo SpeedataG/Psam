@@ -21,13 +21,13 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.speedata.libutils.DataConversionUtils;
 
-import speedatacom.a3310libs.utils.inf.IPsam;
-import speedatacom.a3310libs.utils.realize.Psam3310Realize;
-import speedatacom.a3310libs.utils.utils.DataConversionUtils;
+import java.io.IOException;
+import java.util.Timer;
+
+import speedatacom.a3310libs.PsamManager;
+import speedatacom.a3310libs.inf.IPsam;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
@@ -42,7 +42,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private int fd;
     private int psamflag = 0;
     private DeviceControl mDeviceControl;
-//    private MyLogger logger = MyLogger.jLog();
     private Context mContext;
     private Timer timer;
     private int gpio;
@@ -55,34 +54,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         mContext = this;
-//        try {
-//            mDeviceControl = new DeviceControl();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            mDeviceControl = null;
-//            return;
-//        }
-//        mDeviceControl.PowerOnDevice();
         sharedPreferences = getSharedPreferences("rember", MODE_PRIVATE);
         initUI();
         baurate = sharedPreferences.getInt("baurate", 0);
         serialport = sharedPreferences.getString("serialport", serialport);
-
-/*
-        if (sharedPreferences.getString("gpio", "").equals("GPIO14（KT45）")) {
-            gpio = "14";
-        } else if (sharedPreferences.getString("gpio", "").equals("GPIO96（KT45Q）")) {
-            gpio = "96";
-        } else if (sharedPreferences.getString("gpio", "").equals("GPIO7（KT40Q）")) {
-            gpio = "7";
-        } else if (sharedPreferences.getString("gpio", "").equals("GPIO48（KT40）")) {
-            gpio = "48";
-        }*/
         int position = sharedPreferences.getInt("selectionGpio", 0);
         setGpio(position);
-//        initDevice();
-
-
+        psam3310Realize.DevicePower(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+                this, 88, 2);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -90,18 +69,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 tvVerson.setText("V" + verson);
             }
         });
-//        byte[] cmd = DataConversionUtils.hexStringToByteArray("80f0800008122a31632a3bafe0");
-//        logger.d("bb--" + DataConversionUtils.byteArrayToString(DataConversionUtils
-//                .HexString2Bytes("80f0800008122a31632a3bafe0")));
-
-
-    }
-
-    private void startTask() {
-        if (timer == null) {
-            timer = new Timer();
-            timer.schedule(new ReadTask(), 1000, 300);
-        }
     }
 
     private SharedPreferences sharedPreferences;
@@ -116,7 +83,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btnPower = (Button) findViewById(R.id.btn_power);
         btnClear = (Button) findViewById(R.id.btn_clear);
         tvVerson = (TextView) findViewById(R.id.tv_verson);
-
         btnPower.setOnClickListener(this);
         btn1Activite.setOnClickListener(this);
         btn2Activite.setOnClickListener(this);
@@ -160,26 +126,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
         spinnerGpio.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                gpio = spinnerGpio.getSelectedItem().toString();
                 setGpio(position);
-//                sharedPreferences.edit().putString("gpio", gpio).commit();
                 sharedPreferences.edit().putInt("selectionGpio", position).commit();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
             }
         });
         tvShowData = (TextView) findViewById(R.id.tv_show_message);
         tvShowData.setMovementMethod(ScrollingMovementMethod.getInstance());
         edvADPU = (EditText) findViewById(R.id.edv_adpu_cmd);
         edvADPU.setText("0084000008");
-        //pin = { 0x00, 0x20, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00 };
         edvADPU.setText("0020000003");
         edvADPU.setText("80f0800008122a31632a3bafe0");
         edvADPU.setText("00A404000BA000000003454E45524759");
-//        edvADPU.setText("80f002 00 01 02");
     }
 
     private void setGpio(int position) {
@@ -200,7 +161,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private void PowerOpenDev() {
-//        releaseDev();
         SystemClock.sleep(100);
         initDevice();
     }
@@ -222,30 +182,44 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 
     String send_data = "";
-    Psam3310Realize psam3310Realize = new Psam3310Realize() {
-        @Override
-        public void receData(byte[] data) {
-
-        }
-    };
+    IPsam psam3310Realize = PsamManager.getPsamIntance();
 
     @Override
     public void onClick(View v) {
         if (v == btn1Activite) {
-            psam3310Realize.PsamPower(IPsam.PowerType.Psam1);
-            send_data = DataConversionUtils.byteArrayToString(psam3310Realize.getPowerCmd(IPsam.PowerType.Psam1));
-            tvShowData.setText("Psam1 Send data：\n" + send_data + "\n\n");
+            psamflag = 1;
+            boolean result = psam3310Realize.PsamPower(IPsam.PowerType.Psam1);
+            if (result)
+                tvShowData.setText("Psam1 activite ok\n");
+            else
+                tvShowData.setText("Psam1 activite failed\n");
         } else if (v == btn2Activite) {
-            psam3310Realize.PsamPower(IPsam.PowerType.Psam2);
-            send_data = DataConversionUtils.byteArrayToString(psam3310Realize.getPowerCmd(IPsam.PowerType.Psam2));
-                tvShowData.setText("Psam2 Send data：\n" + send_data + "\n\n");
+            psamflag = 2;
+            boolean result = psam3310Realize.PsamPower(IPsam.PowerType.Psam2);
+            if (result)
+                tvShowData.setText("Psam2 activite ok\n");
+            else
+                tvShowData.setText("Psam2 activite failed\n");
         } else if (v == btnGetRomdan) {
-            mSerialPort.WriteSerialByte(fd, getRomdan());
-            send_data = DataConversionUtils.byteArrayToString(getRomdan());
-            if (psamflag == 1)
-                tvShowData.setText("Psam1 Send data：\n" + send_data + "\n\n");
-            else if (psamflag == 2)
-                tvShowData.setText("Psam2 Send data：\n" + send_data + "\n\n");
+            if (psamflag == 1) {
+                int len = psam3310Realize.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+                        0x08}, IPsam
+                        .PowerType.Psam1);
+                if (len >= 0) {
+                    tvShowData.setText("Psam1 Send data：00 84 00 00 08\n");
+                } else {
+                    tvShowData.setText("Psam1 Send data failed\n");
+                }
+            } else if (psamflag == 2) {
+                int len = psam3310Realize.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+                        0x08}, IPsam
+                        .PowerType.Psam2);
+                if (len >= 0) {
+                    tvShowData.setText("Psam2 Send data：00 84 00 00 08\n");
+                } else {
+                    tvShowData.setText("Psam2 Send data failed\n");
+                }
+            }
         } else if (v == btnSendAdpu) {
             String temp_cmd = edvADPU.getText().toString();
             if ("".equals(temp_cmd) || temp_cmd.length() % 2 > 0 || temp_cmd.length() < 4) {
@@ -253,60 +227,48 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         .show();
                 return;
             }
-//            mSerialPort.WriteSerialByte(fd, adpuPackage(DataConversionUtils.HexString2Bytes
-//                    (temp_cmd)));
             send_data = temp_cmd;
-            if (psamflag == 1)
-                tvShowData.setText("Psam1 Send data：\n" + send_data + "\n\n");
-            else if (psamflag == 2)
-                tvShowData.setText("Psam2 Send data：\n" + send_data + "\n\n");
+            if (psamflag == 1) {
+                int len = psam3310Realize.sendData(com.speedata.libutils.DataConversionUtils
+                        .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
+                if (len >= 0)
+                    tvShowData.setText("Psam1 Send data：\n" + send_data + "\n\n");
+                else
+                    tvShowData.setText("Psam1 Send data：failed");
+            } else if (psamflag == 2) {
+                int len = psam3310Realize.sendData(com.speedata.libutils.DataConversionUtils
+                        .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
+                if (len >= 0)
+                    tvShowData.setText("Psam2 Send data：\n" + send_data + "\n\n");
+                else
+                    tvShowData.setText("Psam2 Send data：failed");
+            }
         } else if (v == btnClear) {
             tvShowData.setText("");
         } else if (v == btnReSet) {
-
-            //复位
-//            try {
-//                mDeviceControl.PsamResetDevice();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                Toast.makeText(mContext, "reset failed", Toast.LENGTH_SHORT).show();
-//            }
-//            Toast.makeText(mContext, "reset ok", Toast.LENGTH_SHORT).show();
         } else if (v == btnPower) {
-//            Toast.makeText(mContext,"power",Toast.LENGTH_SHORT).show();
             PowerOpenDev();
         }
     }
 
-    private int baurate = 9600;
-    private String serialport = "ttyMT1";
+    private int baurate = 115200;
+    private String serialport = "ttyMT2";
 
     private void initDevice() {
-        psam3310Realize.DevicePower(serialport,baurate, DeviceControl.PowerType.MAIN,this,gpio);
-        startTask();
+        psam3310Realize.DevicePower(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+                this, 88, 2);
+        psam3310Realize.startReadThread(handler);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        releaseDev();
-
-        stopTask();
-    }
-
-    private void stopTask() {
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
+        try {
+            psam3310Realize.stopReadThread();
+            psam3310Realize.releaseDev();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    }
-
-    private void releaseDev() {
-        stopTask();
-        mSerialPort.CloseSerial(fd);
-        mSerialPort = null;
-//        mDeviceControl.PowerOffDevice();
-        mDeviceControl = null;
 
     }
 
@@ -315,71 +277,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             byte[] temp_cmd = (byte[]) msg.obj;
-            byte[] byte_len = new byte[2];
-            byte_len[0] = temp_cmd[3];
-            byte_len[1] = temp_cmd[2];
-            int len = DataConversionUtils.byteArrayToInt(byte_len);
-            if (len <= 6) {
-                tvShowData.append("error:" + DataConversionUtils.byteArrayToString(temp_cmd));
-                return;
-            }
-            byte[] temp_data = new byte[len - 6];
-//            logger.d("---len=" + len + temp_cmd[0] + "  " + temp_cmd[1] + "  " + temp_cmd.length);
-            String data;// = DataConversionUtils.byteArrayToString(temp_cmd);
-
-            tvShowData.append("Rx data：\n" + DataConversionUtils.byteArrayToString(temp_cmd) +
-                    "\n\n");
-//            tvShowData.append("命令头：" + DataConversionUtils.byteArrayToString(new
-//                    byte[]{temp_cmd[0], temp_cmd[1]}) + "\n");
-//            tvShowData.append("长度字：" + DataConversionUtils.byteArrayToString(new
-//                    byte[]{temp_cmd[2], temp_cmd[3]}) + "-->" + DataConversionUtils
-//                    .byteArrayToInt(new byte[]{temp_cmd[3], temp_cmd[2]}) + "\n");
-//            tvShowData.append("设备标识：" + DataConversionUtils.byteArrayToString(new
-//                    byte[]{temp_cmd[4], temp_cmd[5]}) + "\n");
-//            tvShowData.append("命令码：" + DataConversionUtils.byteArrayToString(new
-//                    byte[]{temp_cmd[6], temp_cmd[7]}) + "\n");
-//            tvShowData.append("状态字：" + DataConversionUtils.byteArrayToString(new
-//                    byte[]{temp_cmd[8]}));
-//            if (temp_cmd[8] == 0) {
-//                tvShowData.append("-->成功\n");
-//            }
-            tvShowData.append("Unpack data：" + "\n");
-            for (int i = 0; i < len - 6; i++) {
-                temp_data[i] = temp_cmd[i + 9];
-            }
-            if (len <= 6) {
-                return;
-            }
-            tvShowData.append(DataConversionUtils.byteArrayToString(temp_data));
-//            String temp = tvShowData.getText().toString();
-//            if (temp.length() < 10000) {
-//                tvShowData.append(data + "\n");
-//            } else {
-//                tvShowData.setText(data);
-//            }
+            tvShowData.append("rece data:" + DataConversionUtils.byteArrayToString(temp_cmd));
         }
     };
 
-    /**
-     * 读串口
-     */
-    private class ReadTask extends TimerTask {
-        public void run() {
-            try {
-                byte[] temp1 = mSerialPort.ReadSerial(fd, 1024);
-                if (temp1 != null) {
-                    Message msg = new Message();
-                    msg.what = 1;
-                    msg.obj = temp1;
-                    handler.sendMessage(msg);
-                    SystemClock.sleep(1000);
-                }
-            } catch (UnsupportedEncodingException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
 
     private byte[] getRomdan() {
         //0084000008
@@ -397,11 +298,5 @@ public class MainActivity extends Activity implements View.OnClickListener {
         return cmd;
     }
 
-    private IPsam psam = new Psam3310Realize() {
-        @Override
-        public void receData(byte[] data) {
-
-        }
-    };
 
 }
