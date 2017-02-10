@@ -3,12 +3,12 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 23
+    buildToolsVersion '25.0.1'
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 25
+        targetSdkVersion 19
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -116,4 +116,5 @@ dependencies {
     })
     testCompile 'junit:junit:4.12'
     provided 'com.speedata:deivice:1.1'
+
 }
