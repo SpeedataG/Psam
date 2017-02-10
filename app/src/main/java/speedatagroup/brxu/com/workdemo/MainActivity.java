@@ -60,7 +60,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         serialport = sharedPreferences.getString("serialport", serialport);
         int position = sharedPreferences.getInt("selectionGpio", 0);
         setGpio(position);
-        psam3310Realize.DevicePower(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+        psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
                 this, 88, 2);
         runOnUiThread(new Runnable() {
             @Override
@@ -182,27 +182,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 
     String send_data = "";
-    IPsam psam3310Realize = PsamManager.getPsamIntance();
+    IPsam psam = PsamManager.getPsamIntance();
 
     @Override
     public void onClick(View v) {
         if (v == btn1Activite) {
             psamflag = 1;
-            boolean result = psam3310Realize.PsamPower(IPsam.PowerType.Psam1);
+            boolean result = psam.PsamPower(IPsam.PowerType.Psam1);
             if (result)
                 tvShowData.setText("Psam1 activite ok\n");
             else
                 tvShowData.setText("Psam1 activite failed\n");
         } else if (v == btn2Activite) {
             psamflag = 2;
-            boolean result = psam3310Realize.PsamPower(IPsam.PowerType.Psam2);
+            boolean result = psam.PsamPower(IPsam.PowerType.Psam2);
             if (result)
                 tvShowData.setText("Psam2 activite ok\n");
             else
                 tvShowData.setText("Psam2 activite failed\n");
         } else if (v == btnGetRomdan) {
             if (psamflag == 1) {
-                int len = psam3310Realize.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+                int len = psam.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
                         0x08}, IPsam
                         .PowerType.Psam1);
                 if (len >= 0) {
@@ -211,7 +211,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     tvShowData.setText("Psam1 Send data failed\n");
                 }
             } else if (psamflag == 2) {
-                int len = psam3310Realize.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+                int len = psam.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
                         0x08}, IPsam
                         .PowerType.Psam2);
                 if (len >= 0) {
@@ -229,14 +229,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
             send_data = temp_cmd;
             if (psamflag == 1) {
-                int len = psam3310Realize.sendData(com.speedata.libutils.DataConversionUtils
+                int len = psam.sendData(com.speedata.libutils.DataConversionUtils
                         .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
                 if (len >= 0)
                     tvShowData.setText("Psam1 Send data：\n" + send_data + "\n\n");
                 else
                     tvShowData.setText("Psam1 Send data：failed");
             } else if (psamflag == 2) {
-                int len = psam3310Realize.sendData(com.speedata.libutils.DataConversionUtils
+                int len = psam.sendData(com.speedata.libutils.DataConversionUtils
                         .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
                 if (len >= 0)
                     tvShowData.setText("Psam2 Send data：\n" + send_data + "\n\n");
@@ -255,17 +255,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private String serialport = "ttyMT2";
 
     private void initDevice() {
-        psam3310Realize.DevicePower(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+        psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
                 this, 88, 2);
-        psam3310Realize.startReadThread(handler);
+        psam.startReadThread(handler);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
-            psam3310Realize.stopReadThread();
-            psam3310Realize.releaseDev();
+            psam.stopReadThread();
+            psam.releaseDev();
         } catch (IOException e) {
             e.printStackTrace();
         }

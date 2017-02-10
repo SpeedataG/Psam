@@ -24,13 +24,13 @@ public interface IPsam {
     public boolean PsamPower(PowerType type);
 
     /**
-     * 设备上电
+     * 初始化设备
      * @param serialport  串口
      * @param braut  波特率
      * @param power_typeint 上电类型 主板 或外部 或主板和外部
      * @param gpio
      */
-    public  void DevicePower(String serialport, int braut, DeviceControl.PowerType power_typeint, Context context, int ...  gpio );
+    public  void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint, Context context, int ...  gpio );
     /**
      * 单次读串口
      * @param len 最大长度

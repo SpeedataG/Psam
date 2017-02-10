@@ -69,8 +69,8 @@ public class Psam3310Realize implements IPsam {
     }
 
     @Override
-    public void DevicePower(String serialport, int braut, DeviceControl.PowerType power_typeint,
-                            Context context, int... gpio) {
+    public void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint,
+                        Context context, int... gpio) {
         mSerialPort = new SerialPort();
         try {
             mSerialPort.OpenSerial("/dev/" + serialport, braut);

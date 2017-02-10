@@ -2,9 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/3310libs/3310libs.iml" filepath="$PROJECT_DIR$/3310libs/3310libs.iml" />
-      <module fileurl="file://$PROJECT_DIR$/3310libs/3310libs.iml" filepath="$PROJECT_DIR$/3310libs/3310libs.iml" />
-      <module fileurl="file://$PROJECT_DIR$/PasmCC3310.iml" filepath="$PROJECT_DIR$/PasmCC3310.iml" />
       <module fileurl="file://$PROJECT_DIR$/Psam.iml" filepath="$PROJECT_DIR$/Psam.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/psam/psam.iml" filepath="$PROJECT_DIR$/psam/psam.iml" />
