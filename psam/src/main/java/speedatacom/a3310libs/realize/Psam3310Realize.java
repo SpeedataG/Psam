@@ -1,9 +1,10 @@
 package speedatacom.a3310libs.realize;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 import android.widget.Toast;
@@ -25,8 +26,11 @@ public class Psam3310Realize implements IPsam {
     private DeviceControl mDeviceControl;
     private MyLogger logger = MyLogger.jLog();
     private int fd;
+    private Context mContext;
 
-    public static boolean isPowering = false;
+
+    private boolean isPower = false;
+    PowerType type;
 
     /**
      * psam软上电
@@ -35,42 +39,25 @@ public class Psam3310Realize implements IPsam {
      * @return
      */
     @Override
-    public boolean PsamPower(PowerType type) {
-        isPowering = true;
+    public void PsamPower(PowerType type) {
+        this.type = type;
         if (mSerialPort == null) {
-            return false;
+            return;
         }
-        SystemClock.sleep(500);
+        isPower = true;
         mSerialPort.WriteSerialByte(fd, getPowerCmd(type));
-        logger.d("===isPowering=" + isPowering);
-        SystemClock.sleep(50);
-        try {
-            byte[] bytes = mSerialPort.ReadSerial(fd, 256);
-//            int count = 0;
-//            while (bytes == null && count < 5) {
-//                bytes = mSerialPort.ReadSerial(fd, 256);
-//                count++;
-//            }
-            android.os.Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    isPowering = false;
-                }
-            }, 1500);
-            //长度小于10或者串口无数据返回  上电失败
-            if (bytes == null || bytes.length <= 10)
-                return false;
-            else return true;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return false;
-        }
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                isPower = false;
+            }
+        }, 200);
     }
 
     @Override
     public void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint,
                         Context context, int... gpio) {
+        mContext = context;
         mSerialPort = new SerialPort();
         try {
             mSerialPort.OpenSerial("/dev/" + serialport, braut);
@@ -123,19 +110,21 @@ public class Psam3310Realize implements IPsam {
         public void run() {
             super.run();
             while (!isInterrupted()) {
-//                SystemClock.sleep(100);
                 try {
-                    if (!isPowering) {
-                        logger.d("===isPowering=" + isPowering + this);
-                        byte[] bytes = mSerialPort.ReadSerial(fd, 1024);
-                        logger.d("===thread read="+this);
-                        if (bytes != null) {
+                    //aa bb 06 00 00 00 11 06 14 17
+                    byte[] bytes = mSerialPort.ReadSerial(fd, 1024);
+                    logger.d("===thread read=" + this);
+                    if (bytes != null) {
+                        if (isPower && bytes.length > 10) {
+                            sendPowerResult(type, true);
+                        } else if (isPower && bytes.length <= 10) {
+                            sendPowerResult(type, false);
+                        } else {
                             byte[] data = parsePackage(bytes);
                             Message msg = new Message();
                             msg.obj = data;
                             handler.sendMessage(msg);
                         }
-
                     }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -144,6 +133,23 @@ public class Psam3310Realize implements IPsam {
         }
     }
 
+    public static String POWER_ACTION = "Power";
+    public static String POWER_RESULT = "result";
+    public static String POWER_TYPE = "type";
+
+    private void sendPowerResult(PowerType type, boolean result) {
+
+        Intent intent = new Intent();
+        intent.setAction(POWER_ACTION);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(POWER_RESULT, result);
+        if (type.equals(PowerType.Psam1))
+            bundle.putInt(POWER_TYPE, 1);
+        else
+            bundle.putInt(POWER_TYPE, 2);
+        intent.putExtras(bundle);
+        mContext.sendBroadcast(intent);
+    }
 
     @Override
     public void startReadThread(Handler handler) {
@@ -169,6 +175,19 @@ public class Psam3310Realize implements IPsam {
     public void releaseDev() throws IOException {
         mSerialPort.CloseSerial(fd);
         mDeviceControl.PowerOffDevice();
+    }
+
+    @Override
+    public void resetDev(DeviceControl.PowerType type, int Gpio) {
+        DeviceControl mDeviceControl = null;
+        try {
+            mDeviceControl = new DeviceControl(type, Gpio);
+            mDeviceControl.PowerOnDevice();
+            mDeviceControl.PowerOffDevice();
+            mDeviceControl.PowerOnDevice();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

@@ -12,50 +12,60 @@ import java.io.IOException;
  */
 
 public interface IPsam {
-    public enum PowerType{
-        Psam1,Psam2
+    public enum PowerType {
+        Psam1, Psam2
     }
 
     /**
-     *  软上电  psam1 上电 psam2 上电
+     * 软上电  psam1 上电 psam2 上电
+     *
      * @param type
      * @return
      */
-    public boolean PsamPower(PowerType type);
+    public void PsamPower(PowerType type);
+
+//    abstract void PsamPowerResult(PowerType type, boolean result);
 
     /**
      * 初始化设备
-     * @param serialport  串口
-     * @param braut  波特率
+     *
+     * @param serialport    串口
+     * @param braut         波特率
      * @param power_typeint 上电类型 主板 或外部 或主板和外部
      * @param gpio
      */
-    public  void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint, Context context, int ...  gpio );
+    public void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint,
+                        Context context, int... gpio);
+
     /**
      * 单次读串口
+     *
      * @param len 最大长度
      * @return 返回串口数据
      */
-    public  byte[]  receData(int len);
+    public byte[] receData(int len);
 
     /**
-     *发送数据
+     * 发送数据
+     *
      * @param data
      * @return
      */
-    public int sendData(byte[] data,PowerType type);
+    public int sendData(byte[] data, PowerType type);
 
     /**
-     *开启读线程
+     * 开启读线程
      */
-    public  void  startReadThread(Handler handler);
+    public void startReadThread(Handler handler);
 
     /**
-     *停止读线程
+     * 停止读线程
      */
-    public  void  stopReadThread();
+    public void stopReadThread();
 
     //释放设备
     public void releaseDev() throws IOException;
+
+    public void resetDev(DeviceControl.PowerType type,int Gpio);
 
 }

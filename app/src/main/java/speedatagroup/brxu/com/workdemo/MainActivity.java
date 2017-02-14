@@ -1,7 +1,10 @@
 package speedatagroup.brxu.com.workdemo;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -28,6 +31,9 @@ import java.util.Timer;
 
 import speedatacom.a3310libs.PsamManager;
 import speedatacom.a3310libs.inf.IPsam;
+
+import static speedatacom.a3310libs.realize.Psam3310Realize.POWER_ACTION;
+import static speedatacom.a3310libs.realize.Psam3310Realize.POWER_RESULT;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
@@ -69,6 +75,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 tvVerson.setText("V" + verson);
             }
         });
+        IntentFilter intentFilter=new IntentFilter();
+        intentFilter.addAction(POWER_ACTION);
+        registerReceiver(broadcastReceiver,intentFilter);
+        PowerOpenDev();
     }
 
     private SharedPreferences sharedPreferences;
@@ -184,22 +194,31 @@ public class MainActivity extends Activity implements View.OnClickListener {
     String send_data = "";
     IPsam psam = PsamManager.getPsamIntance();
 
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(POWER_ACTION)) {
+                boolean result = intent.getBooleanExtra(POWER_RESULT, false);
+                tvShowData.setText("Psam activite " + result + "\n");
+
+            }
+        }
+    };
+
     @Override
     public void onClick(View v) {
         if (v == btn1Activite) {
             psamflag = 1;
-            boolean result = psam.PsamPower(IPsam.PowerType.Psam1);
-            if (result)
-                tvShowData.setText("Psam1 activite ok\n");
-            else
-                tvShowData.setText("Psam1 activite failed\n");
+            psam.PsamPower(IPsam.PowerType.Psam1);
+
         } else if (v == btn2Activite) {
             psamflag = 2;
-            boolean result = psam.PsamPower(IPsam.PowerType.Psam2);
-            if (result)
-                tvShowData.setText("Psam2 activite ok\n");
-            else
-                tvShowData.setText("Psam2 activite failed\n");
+            psam.PsamPower(IPsam.PowerType.Psam2);
+//            if (result)
+//                tvShowData.setText("Psam2 activite ok\n");
+//            else
+//                tvShowData.setText("Psam2 activite failed\n");
         } else if (v == btnGetRomdan) {
             if (psamflag == 1) {
                 int len = psam.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
@@ -246,6 +265,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else if (v == btnClear) {
             tvShowData.setText("");
         } else if (v == btnReSet) {
+            psam.resetDev(DeviceControl.PowerType.EXPAND,1);
         } else if (v == btnPower) {
             PowerOpenDev();
         }
@@ -256,7 +276,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private void initDevice() {
         psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
-                this, 88, 2);
+                this, 88,2);
         psam.startReadThread(handler);
     }
 
@@ -266,6 +286,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         try {
             psam.stopReadThread();
             psam.releaseDev();
+            unregisterReceiver(broadcastReceiver);
         } catch (IOException e) {
             e.printStackTrace();
         }
