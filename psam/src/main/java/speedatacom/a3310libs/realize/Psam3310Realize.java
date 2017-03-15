@@ -5,15 +5,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
-import android.widget.Toast;
 
+import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.DataConversionUtils;
 import com.speedata.libutils.MyLogger;
+import com.speedata.libutils.ReadBean;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import speedatacom.a3310libs.inf.IPsam;
 
@@ -39,49 +42,92 @@ public class Psam3310Realize implements IPsam {
      * @return
      */
     @Override
-    public void PsamPower(PowerType type) {
+    public byte[] PsamPower(PowerType type) {
         this.type = type;
         if (mSerialPort == null) {
-            return;
+            return null;
         }
-        isPower = true;
-        mSerialPort.WriteSerialByte(fd, getPowerCmd(type));
-        new android.os.Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                isPower = false;
-            }
-        }, 200);
+        try {
+            return WriteCmd(getPowerCmd(type), type);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     public void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint,
-                        Context context, int... gpio) {
+                        Context context, int... gpio) throws IOException {
         mContext = context;
         mSerialPort = new SerialPort();
-        try {
-            mSerialPort.OpenSerial("/dev/" + serialport, braut);
+        mSerialPort.OpenSerial("/dev/" + serialport, braut);
+        fd = mSerialPort.getFd();
+        logger.d("--onCreate--open-serial=" + fd);
+        mDeviceControl = new DeviceControl(power_typeint, gpio);
+        mDeviceControl.PowerOnDevice();
+    }
+
+    @Override
+    public void initDev(Context context) throws IOException {
+
+        ReadBean readBean = ConfigUtils.readConfig(context);
+        if (readBean == null) {
+            throw new IOException();
+        } else {
+            mSerialPort = new SerialPort();
+//        try {
+            ReadBean.PasmBean pasm = readBean.getPasm();
+            mSerialPort.OpenSerial(pasm.getSerialPort(), pasm.getBraut());
             fd = mSerialPort.getFd();
             logger.d("--onCreate--open-serial=" + fd);
-        } catch (IOException e) {
-            Toast.makeText(context, "The serial port is not found, forced exit！", Toast.LENGTH_LONG)
-                    .show();
-            e.printStackTrace();
-            System.exit(0);
-        } catch (SecurityException e) {
-            Toast.makeText(context, "No serial port authority, forced exit!", Toast.LENGTH_LONG)
-                    .show();
-            e.printStackTrace();
-            System.exit(0);
-        }
-        try {
-            mDeviceControl = new DeviceControl(power_typeint, gpio);
+            String type = pasm.getPowerType();
+            DeviceControl.PowerType power_type;
+            switch (type) {
+                case "MAIN":
+                    power_type = DeviceControl.PowerType.MAIN;
+                    break;
+                case "MAIN_AND_EXPAND":
+                    power_type = DeviceControl.PowerType.MAIN_AND_EXPAND;
+                    break;
+                case "EXPAND":
+                    power_type = DeviceControl.PowerType.EXPAND;
+                    break;
+                default:
+                    power_type = DeviceControl.PowerType.MAIN;
+                    break;
+            }
+            List<String> gpio = pasm.getGpio();
+            int[] gpios = new int[gpio.size()];
+            for (int i = 0; i < gpio.size(); i++) {
+                gpios[i] = Integer.parseInt(gpio.get(i));
+            }
+            mDeviceControl = new DeviceControl(power_type, gpios);
             mDeviceControl.PowerOnDevice();
-        } catch (IOException e) {
-            e.printStackTrace();
-            mDeviceControl = null;
-            e.printStackTrace();
         }
+    }
+
+    /**
+     * @param data  写入指令
+     * @param type  卡类型
+     * @param delay 读取最大延时
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    @Override
+    public byte[] WriteCmd(byte[] data, PowerType type) throws
+            UnsupportedEncodingException {
+        mSerialPort.WriteSerialByte(fd, adpuPackage(data, type));
+        byte[] read = null;
+        long currentTime = System.currentTimeMillis();
+        int count=0;
+        while (read == null && count<10) {
+            count++;
+            SystemClock.sleep(5);
+            read = mSerialPort.ReadSerial(fd, 50);
+        }
+        if (read != null)
+            read= parsePackage(read);
+        return read;
     }
 
     @Override

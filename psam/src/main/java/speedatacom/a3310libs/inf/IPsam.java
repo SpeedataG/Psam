@@ -6,6 +6,7 @@ import android.serialport.DeviceControl;
 import android.os.Handler;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by suntianwei on 2017/1/19.
@@ -22,9 +23,8 @@ public interface IPsam {
      * @param type
      * @return
      */
-    public void PsamPower(PowerType type);
+    public byte[] PsamPower(PowerType type);
 
-//    abstract void PsamPowerResult(PowerType type, boolean result);
 
     /**
      * 初始化设备
@@ -35,7 +35,12 @@ public interface IPsam {
      * @param gpio
      */
     public void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint,
-                        Context context, int... gpio);
+                        Context context, int... gpio) throws IOException;
+    //自动判断上电
+    public void initDev(Context context) throws IOException;
+    //阻塞型写入
+    public byte[] WriteCmd(byte[] data, PowerType type) throws UnsupportedEncodingException;
+
 
     /**
      * 单次读串口

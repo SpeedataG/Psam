@@ -1,73 +1,55 @@
 package speedatagroup.brxu.com.workdemo;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.os.SystemClock;
 import android.serialport.DeviceControl;
-import android.serialport.SerialPort;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.view.Window;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.DataConversionUtils;
+import com.speedata.libutils.ReadBean;
 
 import java.io.IOException;
-import java.util.Timer;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import speedatacom.a3310libs.PsamManager;
 import speedatacom.a3310libs.inf.IPsam;
-
-import static speedatacom.a3310libs.realize.Psam3310Realize.POWER_ACTION;
-import static speedatacom.a3310libs.realize.Psam3310Realize.POWER_RESULT;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
     //19200 9600
     private Button btn1Activite, btn2Activite, btnGetRomdan, btnSendAdpu, btnClear;
-    private Spinner spinnerSerialport;
-    private Spinner spinnerGpio;
-    private Spinner spinner;
     private EditText edvADPU;
     private TextView tvShowData;
-    private SerialPort mSerialPort;
-    private int fd;
     private int psamflag = 0;
-    private DeviceControl mDeviceControl;
     private Context mContext;
-    private Timer timer;
-    private int gpio;
     private Button btnReSet;
     private Button btnPower;
     private TextView tvVerson;
+    private TextView tvConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
-        mContext = this;
-        sharedPreferences = getSharedPreferences("rember", MODE_PRIVATE);
         initUI();
-        baurate = sharedPreferences.getInt("baurate", 0);
-        serialport = sharedPreferences.getString("serialport", serialport);
-        int position = sharedPreferences.getInt("selectionGpio", 0);
-        setGpio(position);
-        psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
-                this, 88, 2);
+        mContext = this;
+        try {
+            psam.initDev(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -75,16 +57,26 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 tvVerson.setText("V" + verson);
             }
         });
-        IntentFilter intentFilter=new IntentFilter();
-        intentFilter.addAction(POWER_ACTION);
-        registerReceiver(broadcastReceiver,intentFilter);
+        boolean isExit = ConfigUtils.isConfigFileExists();
+        if (isExit)
+            tvConfig.setText("定制配置：\n");
+        else
+            tvConfig.setText("标准配置：\n");
+        ReadBean.PasmBean pasm = ConfigUtils.readConfig(this).getPasm();
+        String gpio = "";
+        List<String> gpio1 = pasm.getGpio();
+        for (String s : gpio1) {
+            gpio += s + ",";
+        }
+        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
+                pasm.getPowerType() + " GPIO:" + gpio);
         PowerOpenDev();
     }
 
-    private SharedPreferences sharedPreferences;
 
     private void initUI() {
         setContentView(R.layout.activity_main);
+        tvConfig = (TextView) findViewById(R.id.tv_config);
         btn1Activite = (Button) findViewById(R.id.btn1_active);
         btn2Activite = (Button) findViewById(R.id.btn2_active);
         btnGetRomdan = (Button) findViewById(R.id.btn_get_ramdon);
@@ -100,50 +92,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btnSendAdpu.setOnClickListener(this);
         btnReSet.setOnClickListener(this);
         btnClear.setOnClickListener(this);
-        spinner = (Spinner) findViewById(R.id.sp_select);
-        spinner.setSelection(sharedPreferences.getInt("selection", 0));
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                baurate = Integer.parseInt(spinner.getSelectedItem().toString());
-//                PowerOpenDev();
-                sharedPreferences.edit().putInt("baurate", baurate).commit();
-                sharedPreferences.edit().putInt("selection", position).commit();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        spinnerSerialport = (Spinner) findViewById(R.id.sp_select_serialport);
-        spinnerSerialport.setSelection(sharedPreferences.getInt("selectionSerialport", 0));
-        spinnerSerialport.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                serialport = spinnerSerialport.getSelectedItem().toString();
-                sharedPreferences.edit().putString("serialport", serialport).commit();
-                sharedPreferences.edit().putInt("selectionSerialport", position).commit();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        spinnerGpio = (Spinner) findViewById(R.id.sp_select_gpio);
-        spinnerGpio.setSelection(sharedPreferences.getInt("selectionGpio", 0));
-        spinnerGpio.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                setGpio(position);
-                sharedPreferences.edit().putInt("selectionGpio", position).commit();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
         tvShowData = (TextView) findViewById(R.id.tv_show_message);
         tvShowData.setMovementMethod(ScrollingMovementMethod.getInstance());
         edvADPU = (EditText) findViewById(R.id.edv_adpu_cmd);
@@ -153,22 +101,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         edvADPU.setText("00A404000BA000000003454E45524759");
     }
 
-    private void setGpio(int position) {
-        switch (position) {
-            case 0:
-                gpio = 14;
-                break;
-            case 1:
-                gpio = 96;
-                break;
-            case 2:
-                gpio = 7;
-                break;
-            case 3:
-                gpio = 48;
-                break;
-        }
-    }
 
     private void PowerOpenDev() {
         SystemClock.sleep(100);
@@ -194,49 +126,49 @@ public class MainActivity extends Activity implements View.OnClickListener {
     String send_data = "";
     IPsam psam = PsamManager.getPsamIntance();
 
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action.equals(POWER_ACTION)) {
-                boolean result = intent.getBooleanExtra(POWER_RESULT, false);
-                tvShowData.setText("Psam activite " + result + "\n");
-
-            }
-        }
-    };
 
     @Override
     public void onClick(View v) {
         if (v == btn1Activite) {
             psamflag = 1;
-            psam.PsamPower(IPsam.PowerType.Psam1);
-
+            byte[] data = psam.PsamPower(IPsam.PowerType.Psam1);
+            if (data != null)
+                tvShowData.setText("Psam1 activite \n" + DataConversionUtils.byteArrayToString
+                        (data));
+            else {
+                tvShowData.setText("failed");
+            }
         } else if (v == btn2Activite) {
             psamflag = 2;
-            psam.PsamPower(IPsam.PowerType.Psam2);
-//            if (result)
-//                tvShowData.setText("Psam2 activite ok\n");
-//            else
-//                tvShowData.setText("Psam2 activite failed\n");
+            byte[] data = psam.PsamPower(IPsam.PowerType.Psam2);
+            if (data != null)
+                tvShowData.setText("Psam2 activite \n" + DataConversionUtils.byteArrayToString
+                        (data));
+            else {
+                tvShowData.setText("failed");
+            }
         } else if (v == btnGetRomdan) {
             if (psamflag == 1) {
-                int len = psam.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
-                        0x08}, IPsam
-                        .PowerType.Psam1);
-                if (len >= 0) {
+                try {
                     tvShowData.setText("Psam1 Send data：00 84 00 00 08\n");
-                } else {
-                    tvShowData.setText("Psam1 Send data failed\n");
+                    byte[] data = psam.WriteCmd(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+                            0x08}, IPsam
+                            .PowerType.Psam1);
+                    if (data != null)
+                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
                 }
             } else if (psamflag == 2) {
-                int len = psam.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
-                        0x08}, IPsam
-                        .PowerType.Psam2);
-                if (len >= 0) {
+                try {
                     tvShowData.setText("Psam2 Send data：00 84 00 00 08\n");
-                } else {
-                    tvShowData.setText("Psam2 Send data failed\n");
+                    byte[] data = psam.WriteCmd(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+                            0x08}, IPsam
+                            .PowerType.Psam2);
+                    if (data != null)
+                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
                 }
             }
         } else if (v == btnSendAdpu) {
@@ -248,76 +180,53 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
             send_data = temp_cmd;
             if (psamflag == 1) {
-                int len = psam.sendData(com.speedata.libutils.DataConversionUtils
-                        .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
-                if (len >= 0)
-                    tvShowData.setText("Psam1 Send data：\n" + send_data + "\n\n");
-                else
-                    tvShowData.setText("Psam1 Send data：failed");
+                tvShowData.setText("Psam1 Send data：\n" + send_data + "\n");
+                try {
+                    byte[] data = psam.WriteCmd(DataConversionUtils
+                            .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
+                    if (data != null)
+                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
             } else if (psamflag == 2) {
-                int len = psam.sendData(com.speedata.libutils.DataConversionUtils
-                        .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
-                if (len >= 0)
-                    tvShowData.setText("Psam2 Send data：\n" + send_data + "\n\n");
-                else
-                    tvShowData.setText("Psam2 Send data：failed");
+                tvShowData.setText("Psam2 Send data：\n" + send_data + "\n");
+                try {
+                    byte[] data = psam.WriteCmd(DataConversionUtils
+                            .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
+                    if (data != null)
+                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             }
         } else if (v == btnClear) {
             tvShowData.setText("");
         } else if (v == btnReSet) {
-            psam.resetDev(DeviceControl.PowerType.EXPAND,1);
+            psam.resetDev(DeviceControl.PowerType.EXPAND, 1);
         } else if (v == btnPower) {
             PowerOpenDev();
         }
     }
 
-    private int baurate = 115200;
-    private String serialport = "ttyMT2";
 
     private void initDevice() {
-        psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
-                this, 88,2);
-        psam.startReadThread(handler);
+        try {
+            psam.initDev(this);
+            psam.resetDev(DeviceControl.PowerType.MAIN, 98);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
     }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
-            psam.stopReadThread();
             psam.releaseDev();
-            unregisterReceiver(broadcastReceiver);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
-
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            byte[] temp_cmd = (byte[]) msg.obj;
-            tvShowData.append("rece data:" + DataConversionUtils.byteArrayToString(temp_cmd));
-        }
-    };
-
-
-    private byte[] getRomdan() {
-        //0084000008
-        //aabb 0A00 0000 2306 00A4040012 51
-        //aabb 0a00 0000 2306 0084000008 51
-        //aabb 0500 0000 1306 0084000008 51
-        byte[] cmd = new byte[]{(byte) 0xaa, (byte) 0xbb, 0x0a, 0x00, 0x00, 0x00, 0x13, 0x06,
-                0x00, (byte)
-                0x84, 0x00, 0x00, 0x08, 0x51};
-        if (psamflag == 1)
-            cmd[6] = 0x13;
-        else if (psamflag == 2)
-            cmd[6] = 0x23;
-
-        return cmd;
-    }
-
-
 }

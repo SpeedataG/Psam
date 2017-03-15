@@ -58,14 +58,13 @@
 
 |函数原型|void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint, Context context, int ...  gpio );	                                   |
 -------    |-------
-|功能描述  |模块软使能|
+|功能描述  |指定参数初始化模块|
 |参数描述  |String serialport 串口号 |
 |参数描述  |int braut 波特率 |
 |参数描述  |DeviceControl.PowerType power_typeint 上电类型 |
 |参数描述  |Context context 上下文|
-|参数描述  |String serialport 串口号 |
 |参数描述  |int ...  gpio 上电gpio |
-|返回类型  |b|
+|返回类型  |无|
 **初始化示例**
 
 ```
