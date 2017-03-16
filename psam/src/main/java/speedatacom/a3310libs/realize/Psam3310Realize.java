@@ -1,10 +1,6 @@
 package speedatacom.a3310libs.realize;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
@@ -30,9 +26,7 @@ public class Psam3310Realize implements IPsam {
     private MyLogger logger = MyLogger.jLog();
     private int fd;
     private Context mContext;
-
-
-    private boolean isPower = false;
+    //    private boolean isPower = false;
     PowerType type;
 
     /**
@@ -67,6 +61,9 @@ public class Psam3310Realize implements IPsam {
         mDeviceControl.PowerOnDevice();
     }
 
+    private int resetGpio = 1;
+    private DeviceControl.PowerType power_type= DeviceControl.PowerType.MAIN;
+
     @Override
     public void initDev(Context context) throws IOException {
 
@@ -78,10 +75,11 @@ public class Psam3310Realize implements IPsam {
 //        try {
             ReadBean.PasmBean pasm = readBean.getPasm();
             mSerialPort.OpenSerial(pasm.getSerialPort(), pasm.getBraut());
+            resetGpio = pasm.getResetGpio();
             fd = mSerialPort.getFd();
             logger.d("--onCreate--open-serial=" + fd);
             String type = pasm.getPowerType();
-            DeviceControl.PowerType power_type;
+
             switch (type) {
                 case "MAIN":
                     power_type = DeviceControl.PowerType.MAIN;
@@ -107,9 +105,8 @@ public class Psam3310Realize implements IPsam {
     }
 
     /**
-     * @param data  写入指令
-     * @param type  卡类型
-     * @param delay 读取最大延时
+     * @param data 写入指令
+     * @param type 卡类型
      * @return
      * @throws UnsupportedEncodingException
      */
@@ -119,103 +116,103 @@ public class Psam3310Realize implements IPsam {
         mSerialPort.WriteSerialByte(fd, adpuPackage(data, type));
         byte[] read = null;
         long currentTime = System.currentTimeMillis();
-        int count=0;
-        while (read == null && count<10) {
+        int count = 0;
+        while (read == null && count < 10) {
             count++;
             SystemClock.sleep(5);
             read = mSerialPort.ReadSerial(fd, 50);
         }
         if (read != null)
-            read= parsePackage(read);
+            read = parsePackage(read);
         return read;
     }
+//
+//    @Override
+//    public byte[] receData(int len) {
+//        try {
+//            byte[] data = mSerialPort.ReadSerial(fd, len);
+//            if (data != null)
+//                return parsePackage(data);
+//            else return null;
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+//
+//    @Override
+//    public int sendData(byte[] data, PowerType type) {
+//        return mSerialPort.WriteSerialByte(fd, adpuPackage(data, type));
+//    }
 
-    @Override
-    public byte[] receData(int len) {
-        try {
-            byte[] data = mSerialPort.ReadSerial(fd, len);
-            if (data != null)
-                return parsePackage(data);
-            else return null;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+//    private android.os.Handler handler;
+//    private ReadThread readThread;
+//
+//    private class ReadThread extends Thread {
+//        @Override
+//        public void run() {
+//            super.run();
+//            while (!isInterrupted()) {
+//                try {
+//                    //aa bb 06 00 00 00 11 06 14 17
+//                    byte[] bytes = mSerialPort.ReadSerial(fd, 1024);
+//                    logger.d("===thread read=" + this);
+//                    if (bytes != null) {
+//                        if (isPower && bytes.length > 10) {
+//                            sendPowerResult(type, true);
+//                        } else if (isPower && bytes.length <= 10) {
+//                            sendPowerResult(type, false);
+//                        } else {
+//                            byte[] data = parsePackage(bytes);
+//                            Message msg = new Message();
+//                            msg.obj = data;
+//                            handler.sendMessage(msg);
+//                        }
+//                    }
+//                } catch (UnsupportedEncodingException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 
-    @Override
-    public int sendData(byte[] data, PowerType type) {
-        return mSerialPort.WriteSerialByte(fd, adpuPackage(data, type));
-    }
+//    public static String POWER_ACTION = "Power";
+//    public static String POWER_RESULT = "result";
+//    public static String POWER_TYPE = "type";
 
-    private android.os.Handler handler;
-    private ReadThread readThread;
+//    private void sendPowerResult(PowerType type, boolean result) {
+//
+//        Intent intent = new Intent();
+//        intent.setAction(POWER_ACTION);
+//        Bundle bundle = new Bundle();
+//        bundle.putBoolean(POWER_RESULT, result);
+//        if (type.equals(PowerType.Psam1))
+//            bundle.putInt(POWER_TYPE, 1);
+//        else
+//            bundle.putInt(POWER_TYPE, 2);
+//        intent.putExtras(bundle);
+//        mContext.sendBroadcast(intent);
+//    }
 
-    private class ReadThread extends Thread {
-        @Override
-        public void run() {
-            super.run();
-            while (!isInterrupted()) {
-                try {
-                    //aa bb 06 00 00 00 11 06 14 17
-                    byte[] bytes = mSerialPort.ReadSerial(fd, 1024);
-                    logger.d("===thread read=" + this);
-                    if (bytes != null) {
-                        if (isPower && bytes.length > 10) {
-                            sendPowerResult(type, true);
-                        } else if (isPower && bytes.length <= 10) {
-                            sendPowerResult(type, false);
-                        } else {
-                            byte[] data = parsePackage(bytes);
-                            Message msg = new Message();
-                            msg.obj = data;
-                            handler.sendMessage(msg);
-                        }
-                    }
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    public static String POWER_ACTION = "Power";
-    public static String POWER_RESULT = "result";
-    public static String POWER_TYPE = "type";
-
-    private void sendPowerResult(PowerType type, boolean result) {
-
-        Intent intent = new Intent();
-        intent.setAction(POWER_ACTION);
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(POWER_RESULT, result);
-        if (type.equals(PowerType.Psam1))
-            bundle.putInt(POWER_TYPE, 1);
-        else
-            bundle.putInt(POWER_TYPE, 2);
-        intent.putExtras(bundle);
-        mContext.sendBroadcast(intent);
-    }
-
-    @Override
-    public void startReadThread(Handler handler) {
-        this.handler = handler;
-        if (readThread != null) {
-            readThread.interrupt();
-            readThread = null;
-        }
-        readThread = new ReadThread();
-        readThread.start();
-    }
-
-    @Override
-    public void stopReadThread() {
-        if (readThread != null) {
-            readThread.interrupt();
-            readThread = null;
-            logger.d("===thread==stop");
-        }
-    }
+//    @Override
+//    public void startReadThread(Handler handler) {
+//        this.handler = handler;
+//        if (readThread != null) {
+//            readThread.interrupt();
+//            readThread = null;
+//        }
+//        readThread = new ReadThread();
+//        readThread.start();
+//    }
+//
+//    @Override
+//    public void stopReadThread() {
+//        if (readThread != null) {
+//            readThread.interrupt();
+//            readThread = null;
+//            logger.d("===thread==stop");
+//        }
+//    }
 
     @Override
     public void releaseDev() throws IOException {
@@ -234,6 +231,11 @@ public class Psam3310Realize implements IPsam {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void resetDev() {
+        resetDev(power_type, resetGpio);
     }
 
     /**

@@ -6,8 +6,8 @@
 
 ```
  dependencies {
-    compile 'com.speedata:deivice:1.1'
-    compile 'com.speedata:psam:1.1'
+    compile 'com.speedata:deivice:1.4'
+    compile 'com.speedata:psam:1.2'
   }
 ```
 **Eclipse** 需导入libs库 LibDevice 和 LibIdentity
@@ -15,9 +15,9 @@
 
 1. initDev 初始化设备
 1. PsamPower 软使能
-1. sendData 发送数据
-1. startReadThread 开启读线程
-1. stopReadThread 停止读线程
+1. WriteCmd 写指令
+1. resetDev 硬件gpio复位
+1. releaseDev 释放设备
 
 
 -  枚举 PowerType
@@ -65,49 +65,58 @@
 |参数描述  |Context context 上下文|
 |参数描述  |int ...  gpio 上电gpio |
 |返回类型  |无|
+
+
+
+|函数原型|void initDev(Context context) throws IOException;	                                   |
+-------    |-------
+|功能描述  |自動初始化模塊|
+|参数描述  |Context context 上下文|
+|返回类型  |失敗拋出異常|
+
 **初始化示例**
 
 ```
 
- //调用主板和外部扩展上电示例
-   psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
-                this, 88, 2);
+ //自动初始化模块
+   psam.initDev(this);
 ```
 
--  复位
+-  使能卡
+
+函数原型|byte[] PsamPower(IPsam.PowerType type)	                                   |
+-------    |-------
+|功能描述  |使能卡|
+|参数描述  |IPsam.PowerType 卡1或者卡2|
+|返回类型  |byte[] 上电返回的数据  |
+
+
+-  发送指令
+
+|函数原型|byte[] WriteCmd(byte[] data, PowerType type) throws UnsupportedEncodingException                                   |
+-------    |-------
+|功能描述  |发送指令|
+|参数描述  |byte[] data 发送的数据|
+|参数描述  |IPsam.PowerType type 卡槽|
+|返回类型  |byte[] 模块返回数据  |
+
+-  硬件复位
 
 |函数原型|void resetDev(DeviceControl.PowerType type,int Gpio)	                                   |
 -------    |-------
-|功能描述  |发送数据|
+|功能描述  |输入指定参数进行硬件gpio复位|
 |参数描述  |DeviceControl.PowerType 上电类型|
 |参数描述  |int Gpio|
 |返回类型  |无  |
 
 
--  发送数据
-
-|函数原型|int sendData(byte[] data,IPsam.PowerType type)	                                   |
+|函数原型|void  resetDev()	                                   |
 -------    |-------
-|功能描述  |发送数据|
-|参数描述  |byte[] data 发送的数据|
-|参数描述  |IPsam.PowerType type 卡槽|
-|返回类型  |int  大于0代表写入成功  |
-
--  开启读线程
-
-|函数原型|void  startReadThread(Handler handler)	                                   |
--------    |-------
-|功能描述  |开启读线程|
-|参数描述  |Handler handler  用户需实现handleMessage 处理接受到的数据|
-|返回类型  |无  |
-
--  开启读线程
-
-|函数原型|void  stopReadThread()	                                   |
--------    |-------
-|功能描述  |停止读线程|
+|功能描述  |硬件复位gpio 按照自动匹配参数 给电平复位 |
 |参数描述  |无|
 |返回类型  |无  |
+
+
 
 -  释放设备
 
@@ -116,6 +125,8 @@
 |功能描述  |释放设备|
 |参数描述  |无  程序退出时需调用此方法|
 |返回类型  |无  |
+
+
 
 
 

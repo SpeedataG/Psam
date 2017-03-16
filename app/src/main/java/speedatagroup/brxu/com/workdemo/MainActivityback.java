@@ -67,11 +67,11 @@
 //        int position = sharedPreferences.getInt("selectionGpio", 0);
 //        setGpio(position);
 //        try {
-//            psam.initDev(this);
+//            psamIntance.initDev(this);
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-////        psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+////        psamIntance.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
 ////                this, 88, 2);
 //        runOnUiThread(new Runnable() {
 //            @Override
@@ -197,7 +197,7 @@
 //
 //
 //    String send_data = "";
-//    IPsam psam = PsamManager.getPsamIntance();
+//    IPsam psamIntance = PsamManager.getPsamIntance();
 //
 //    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 //        @Override
@@ -215,18 +215,18 @@
 //    public void onClick(View v) {
 //        if (v == btn1Activite) {
 //            psamflag = 1;
-//            psam.PsamPower(IPsam.PowerType.Psam1);
+//            psamIntance.PsamPower(IPsam.PowerType.Psam1);
 //
 //        } else if (v == btn2Activite) {
 //            psamflag = 2;
-//            psam.PsamPower(IPsam.PowerType.Psam2);
+//            psamIntance.PsamPower(IPsam.PowerType.Psam2);
 ////            if (result)
 ////                tvShowData.setText("Psam2 activite ok\n");
 ////            else
 ////                tvShowData.setText("Psam2 activite failed\n");
 //        } else if (v == btnGetRomdan) {
 //            if (psamflag == 1) {
-//                int len = psam.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+//                int len = psamIntance.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
 //                        0x08}, IPsam
 //                        .PowerType.Psam1);
 //                if (len >= 0) {
@@ -235,7 +235,7 @@
 //                    tvShowData.setText("Psam1 Send data failed\n");
 //                }
 //            } else if (psamflag == 2) {
-//                int len = psam.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
+//                int len = psamIntance.sendData(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
 //                        0x08}, IPsam
 //                        .PowerType.Psam2);
 //                if (len >= 0) {
@@ -253,14 +253,14 @@
 //            }
 //            send_data = temp_cmd;
 //            if (psamflag == 1) {
-//                int len = psam.sendData(com.speedata.libutils.DataConversionUtils
+//                int len = psamIntance.sendData(com.speedata.libutils.DataConversionUtils
 //                        .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
 //                if (len >= 0)
 //                    tvShowData.setText("Psam1 Send data：\n" + send_data + "\n\n");
 //                else
 //                    tvShowData.setText("Psam1 Send data：failed");
 //            } else if (psamflag == 2) {
-//                int len = psam.sendData(com.speedata.libutils.DataConversionUtils
+//                int len = psamIntance.sendData(com.speedata.libutils.DataConversionUtils
 //                        .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
 //                if (len >= 0)
 //                    tvShowData.setText("Psam2 Send data：\n" + send_data + "\n\n");
@@ -270,7 +270,7 @@
 //        } else if (v == btnClear) {
 //            tvShowData.setText("");
 //        } else if (v == btnReSet) {
-//            psam.resetDev(DeviceControl.PowerType.EXPAND, 1);
+//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND, 1);
 //        } else if (v == btnPower) {
 //            PowerOpenDev();
 //        }
@@ -280,23 +280,23 @@
 //    private String serialport = "ttyMT2";
 //
 //    private void initDevice() {
-////        psam.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+////        psamIntance.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
 ////                this, 88,2);
 //        try {
-//            psam.initDev(this);
+//            psamIntance.initDev(this);
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //            System.exit(0);
 //        }
-//        psam.startReadThread(handler);
+//        psamIntance.startReadThread(handler);
 //    }
 //
 //    @Override
 //    protected void onDestroy() {
 //        super.onDestroy();
 //        try {
-//            psam.stopReadThread();
-//            psam.releaseDev();
+//            psamIntance.stopReadThread();
+//            psamIntance.releaseDev();
 //            unregisterReceiver(broadcastReceiver);
 //        } catch (IOException e) {
 //            e.printStackTrace();

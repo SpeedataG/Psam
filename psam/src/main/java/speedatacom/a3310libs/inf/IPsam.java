@@ -3,8 +3,6 @@ package speedatacom.a3310libs.inf;
 import android.content.Context;
 import android.serialport.DeviceControl;
 
-import android.os.Handler;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
@@ -41,36 +39,37 @@ public interface IPsam {
     //阻塞型写入
     public byte[] WriteCmd(byte[] data, PowerType type) throws UnsupportedEncodingException;
 
-
-    /**
-     * 单次读串口
-     *
-     * @param len 最大长度
-     * @return 返回串口数据
-     */
-    public byte[] receData(int len);
-
-    /**
-     * 发送数据
-     *
-     * @param data
-     * @return
-     */
-    public int sendData(byte[] data, PowerType type);
-
-    /**
-     * 开启读线程
-     */
-    public void startReadThread(Handler handler);
-
-    /**
-     * 停止读线程
-     */
-    public void stopReadThread();
-
     //释放设备
     public void releaseDev() throws IOException;
 
     public void resetDev(DeviceControl.PowerType type,int Gpio);
+    public void resetDev();
+//    /**
+//     * 单次读串口
+//     *
+//     * @param len 最大长度
+//     * @return 返回串口数据
+//     */
+//    public byte[] receData(int len);
+//
+//    /**
+//     * 发送数据
+//     *
+//     * @param data
+//     * @return
+//     */
+//    public int sendData(byte[] data, PowerType type);
+//
+//    /**
+//     * 开启读线程
+//     */
+//    public void startReadThread(Handler handler);
+//
+//    /**
+//     * 停止读线程
+//     */
+//    public void stopReadThread();
+
+
 
 }
