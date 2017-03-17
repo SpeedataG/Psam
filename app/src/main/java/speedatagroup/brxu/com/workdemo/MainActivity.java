@@ -59,8 +59,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             tvConfig.setText("标准配置：\n");
         ReadBean.PasmBean pasm = ConfigUtils.readConfig(this).getPasm();
         String gpio = "";
-        List<String> gpio1 = pasm.getGpio();
-        for (String s : gpio1) {
+        List<Integer> gpio1 = pasm.getGpio();
+        for (Integer s : gpio1) {
             gpio += s + ",";
         }
         tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +

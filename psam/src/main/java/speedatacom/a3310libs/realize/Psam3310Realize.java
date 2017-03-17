@@ -6,7 +6,6 @@ import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 
 import com.speedata.libutils.ConfigUtils;
-import com.speedata.libutils.DataConversionUtils;
 import com.speedata.libutils.MyLogger;
 import com.speedata.libutils.ReadBean;
 
@@ -62,7 +61,7 @@ public class Psam3310Realize implements IPsam {
     }
 
     private int resetGpio = 1;
-    private DeviceControl.PowerType power_type= DeviceControl.PowerType.MAIN;
+    private DeviceControl.PowerType power_type = DeviceControl.PowerType.MAIN;
 
     @Override
     public void initDev(Context context) throws IOException {
@@ -94,10 +93,10 @@ public class Psam3310Realize implements IPsam {
                     power_type = DeviceControl.PowerType.MAIN;
                     break;
             }
-            List<String> gpio = pasm.getGpio();
+            List<Integer> gpio = pasm.getGpio();
             int[] gpios = new int[gpio.size()];
             for (int i = 0; i < gpio.size(); i++) {
-                gpios[i] = Integer.parseInt(gpio.get(i));
+                gpios[i] = gpio.get(i);
             }
             mDeviceControl = new DeviceControl(power_type, gpios);
             mDeviceControl.PowerOnDevice();
@@ -113,7 +112,7 @@ public class Psam3310Realize implements IPsam {
     @Override
     public byte[] WriteCmd(byte[] data, PowerType type) throws
             UnsupportedEncodingException {
-        mSerialPort.WriteSerialByte(fd, adpuPackage(data, type));
+        mSerialPort.WriteSerialByte(fd, adpuPackages(data, type));
         byte[] read = null;
         long currentTime = System.currentTimeMillis();
         int count = 0;
@@ -123,7 +122,7 @@ public class Psam3310Realize implements IPsam {
             read = mSerialPort.ReadSerial(fd, 50);
         }
         if (read != null)
-            read = parsePackage(read);
+            read = unPackage(read);
         return read;
     }
 //
@@ -238,15 +237,48 @@ public class Psam3310Realize implements IPsam {
         resetDev(power_type, resetGpio);
     }
 
+//    /**
+//     * 打包指令
+//     *
+//     * @param cmd
+//     * @param type
+//     * @return
+//     */
+//    private byte[] adpuPackage(byte[] cmd, PowerType type) {
+//        byte[] result = new byte[cmd.length + 9];
+//        result[0] = (byte) 0xaa;
+//        result[1] = (byte) 0xbb;
+//        result[2] = (byte) (cmd.length + 5);
+//        result[3] = 0x00;
+//        result[4] = 0x00;
+//        result[5] = 0x00;
+//        switch (type) {
+//            case Psam1:
+//                result[6] = 0x13;
+//                break;
+//            case Psam2:
+//                result[6] = 0x23;
+//                break;
+//        }
+//        result[7] = 0x06;
+//        result[result.length - 1] = 0x51;
+//        System.arraycopy(cmd, 0, result, 8, cmd.length);
+//        return result;
+//    }
     /**
-     * 打包指令
-     *
-     * @param cmd
-     * @param type
-     * @return
+     * @param cmd  adpu指令
+     * @param type 0x13卡1 0x23卡2
+     * @return 3310格式指令
      */
-    private byte[] adpuPackage(byte[] cmd, PowerType type) {
-        byte[] result = new byte[cmd.length + 9];
+    public static byte[] adpuPackages(byte[] cmd,  PowerType type) {
+
+        int addCount = 0;
+        for (int j = 0; j < cmd.length; j++) {
+            if (cmd[j] == (byte) 0xaa) {
+                addCount++;
+            }
+        }
+        byte[] result = new byte[cmd.length + 9 + addCount];
         result[0] = (byte) 0xaa;
         result[1] = (byte) 0xbb;
         result[2] = (byte) (cmd.length + 5);
@@ -263,31 +295,67 @@ public class Psam3310Realize implements IPsam {
         }
         result[7] = 0x06;
         result[result.length - 1] = 0x51;
+        int startCount = 8;
+        for (int i = 0; i < cmd.length; i++) {
+            if (cmd[i] == (byte) 0xaa) {
+                result[startCount] = cmd[i];
+                result[startCount + 1] = 0x00;
+                startCount++;
+            } else {
+                result[startCount] = cmd[i];
+            }
+            startCount++;
+        }
         System.arraycopy(cmd, 0, result, 8, cmd.length);
         return result;
     }
-
     /**
      * 拆包
      *
      * @return
      */
-    private byte[] parsePackage(byte[] orgin) {
-        if (orgin.length < 4)
-            return null;
-        byte[] byte_len = new byte[2];
-        byte_len[0] = orgin[3];
-        byte_len[1] = orgin[2];
-        int len = DataConversionUtils.byteArrayToInt(byte_len);
-        if (len < 6)
-            return null;
-        byte[] result = new byte[len - 6];
-        for (int i = 0; i < len - 6; i++) {
-            result[i] = orgin[i + 9];
-        }
-        return result;
-    }
+//    private byte[] parsePackage(byte[] orgin) {
+//        if (orgin.length < 4)
+//            return null;
+//        byte[] byte_len = new byte[2];
+//        byte_len[0] = orgin[3];
+//        byte_len[1] = orgin[2];
+//        int len = DataConversionUtils.byteArrayToInt(byte_len);
+//        if (len < 6)
+//            return null;
+//
+//        byte[] result = new byte[len - 6];
+//        for (int i = 0; i < len - 6; i++) {
+//            result[i] = orgin[i + 9];
+//        }
+//        return result;
+//    }
 
+    public static byte[] unPackage(byte[] cmd) {//解包
+
+        if (cmd == null || cmd.length < 4) {
+            return null;
+        }
+        if (cmd[0] != (byte) 0xaa || cmd[1] != (byte) 0xbb || cmd[2] <= 6) {
+            return null;
+        }
+        byte[] result = new byte[cmd.length - 10];
+        int subCount = 0;//记录返回的数据中有几个0xaa
+        int startCount = 9;
+        for (int i = 0; i < cmd.length - 10; i++) {
+            byte data = cmd[i + startCount];
+            if (data == (byte) 0xaa) {
+                startCount++;
+                subCount++;
+            }
+            result[i] = data;
+        }
+
+        int length = result.length - subCount;
+        byte[] finalresult = new byte[length];
+        System.arraycopy(result, 0, finalresult, 0, length);
+        return finalresult;
+    }
     public byte[] getPowerCmd(PowerType type) {
         //IC卡复位3V
         //aabb05000000110651
