@@ -89,9 +89,20 @@
 
 |函数原型|byte[] WriteCmd(byte[] data, PowerType type) throws UnsupportedEncodingException                                   |
 -------    |-------
+|功能描述  |发送指令 最大读取1024字节 延时为10ms 此方法基本耗时会在15ms以上|
+|参数描述  |byte[] data 发送的数据|
+|参数描述  |IPsam.PowerType type 卡槽|
+|返回类型  |byte[] 模块返回数据  |
+
+-  发送指令
+
+|函数原型|byte[] WriteCmd(byte[] data, PowerType type,int len,int delay) throws UnsupportedEncodingException                                   |
+-------    |-------
 |功能描述  |发送指令|
 |参数描述  |byte[] data 发送的数据|
 |参数描述  |IPsam.PowerType type 卡槽|
+|参数描述  |int len 读取数据的最大长度|
+|参数描述  |int delay 长度不满足或者没有数据时的最大延时|
 |返回类型  |byte[] 模块返回数据  |
 
 -  硬件复位

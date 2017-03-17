@@ -39,6 +39,9 @@ public interface IPsam {
     //阻塞型写入
     public byte[] WriteCmd(byte[] data, PowerType type) throws UnsupportedEncodingException;
 
+    //阻塞型写入
+    public byte[] WriteCmd(byte[] data, PowerType type,int len,int delay) throws UnsupportedEncodingException;
+
     //释放设备
     public void releaseDev() throws IOException;
 
