@@ -41,7 +41,7 @@ public class Psam3310Realize implements IPsam {
             return null;
         }
         try {
-            return WriteCmd(getPowerCmd(type), type);
+            return WriteCmd(getPowerCmd(type));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return null;
@@ -112,14 +112,31 @@ public class Psam3310Realize implements IPsam {
     @Override
     public byte[] WriteCmd(byte[] data, PowerType type) throws
             UnsupportedEncodingException {
-        mSerialPort.WriteSerialByte(fd, adpuPackages(data, type));
+        return WriteCmd(adpuPackages(data, type));
+//        mSerialPort.WriteSerialByte(fd, );
+//        byte[] read = null;
+//        long currentTime = System.currentTimeMillis();
+//        int count = 0;
+//        while (read == null && count < 10) {
+//            count++;
+//            SystemClock.sleep(5);
+//            read = mSerialPort.ReadSerial(fd, 50);
+//        }
+//        if (read != null)
+//            read = unPackage(read);
+//        return read;
+    }
+    //此指令大概15ms左右
+    private byte[] WriteCmd(byte[] data) throws
+            UnsupportedEncodingException {
+        mSerialPort.WriteSerialByte(fd, data);
         byte[] read = null;
         long currentTime = System.currentTimeMillis();
         int count = 0;
         while (read == null && count < 10) {
             count++;
             SystemClock.sleep(5);
-            read = mSerialPort.ReadSerial(fd, 50);
+            read = mSerialPort.ReadSerial(fd, 20);
         }
         if (read != null)
             read = unPackage(read);
@@ -306,7 +323,8 @@ public class Psam3310Realize implements IPsam {
             }
             startCount++;
         }
-        System.arraycopy(cmd, 0, result, 8, cmd.length);
+        //不能这样复制
+//        System.arraycopy(cmd, 0, result, 8, cmd.length);
         return result;
     }
     /**
@@ -331,31 +349,35 @@ public class Psam3310Realize implements IPsam {
 //        return result;
 //    }
 
-    public static byte[] unPackage(byte[] cmd) {//解包
+    public static byte[] unPackage(byte[] cmd) {// 解包
 
-        if (cmd == null || cmd.length < 4) {
+        if (cmd == null || cmd.length <= 10) {
             return null;
         }
-        if (cmd[0] != (byte) 0xaa || cmd[1] != (byte) 0xbb || cmd[2] <= 6) {
+        if (cmd[0] != (byte) 0xaa || cmd[1] != (byte) 0xbb) {
             return null;
         }
-        byte[] result = new byte[cmd.length - 10];
-        int subCount = 0;//记录返回的数据中有几个0xaa
-        int startCount = 9;
-        for (int i = 0; i < cmd.length - 10; i++) {
-            byte data = cmd[i + startCount];
+        int subCount = 0;// 记录返回的数据中有几个0xaa
+        int startCount = 9;//数据头  9位
+        //最后一位为校验位
+        byte[] result = new byte[cmd.length - startCount - 1];
+        for (int i = 0; i < cmd.length - startCount - 1; i++) {
+            int offset = startCount + i;
+            System.out.println("offset=" + offset);
+            byte data = cmd[offset];
+            result[i] = data;
             if (data == (byte) 0xaa) {
+                System.out.println("current=" + 0xaa);
                 startCount++;
                 subCount++;
             }
-            result[i] = data;
         }
-
         int length = result.length - subCount;
         byte[] finalresult = new byte[length];
         System.arraycopy(result, 0, finalresult, 0, length);
         return finalresult;
     }
+
     public byte[] getPowerCmd(PowerType type) {
         //IC卡复位3V
         //aabb05000000110651

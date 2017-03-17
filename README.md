@@ -7,7 +7,7 @@
 ```
  dependencies {
     compile 'com.speedata:deivice:1.4'
-    compile 'com.speedata:psam:1.2'
+    compile 'com.speedata:psam:1.4'
   }
 ```
 **Eclipse** 需导入libs库 LibDevice 和 LibIdentity
@@ -46,17 +46,10 @@
 |返回类型  |无|
 
 
-
-上电结果需接受广播
- POWER_ACTION 广播
- boolean POWER_RESULT 上电结果
- int POWER_TYPE 1 卡1  2卡2
-
-
 -  初始化设备
 
 
-|函数原型|void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint, Context context, int ...  gpio );	                                   |
+|函数原型|void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint, Context context, int ...  gpio )throws IOException;	                                   |
 -------    |-------
 |功能描述  |指定参数初始化模块|
 |参数描述  |String serialport 串口号 |
@@ -64,15 +57,16 @@
 |参数描述  |DeviceControl.PowerType power_typeint 上电类型 |
 |参数描述  |Context context 上下文|
 |参数描述  |int ...  gpio 上电gpio |
-|返回类型  |无|
+|返回类型  |失败抛出异常|
+
 
 
 
 |函数原型|void initDev(Context context) throws IOException;	                                   |
 -------    |-------
-|功能描述  |自動初始化模塊|
+|功能描述  |自动初始化模块|
 |参数描述  |Context context 上下文|
-|返回类型  |失敗拋出異常|
+|返回类型  |失败抛出异常|
 
 **初始化示例**
 
