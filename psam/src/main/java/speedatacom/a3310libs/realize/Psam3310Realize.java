@@ -164,7 +164,10 @@ public class Psam3310Realize implements IPsam {
 
     @Override
     public void resetDev() {
-        resetDev(power_type, resetGpio);
+        if (power_type.equals(DeviceControl.PowerType.MAIN_AND_EXPAND))
+            resetDev(DeviceControl.PowerType.EXPAND, resetGpio);
+        else
+            resetDev(power_type, resetGpio);
     }
 
 

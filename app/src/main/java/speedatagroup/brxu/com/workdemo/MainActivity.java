@@ -94,11 +94,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
 
-
-
-
     String send_data = "";
-     //获取psam实例
+    //获取psam实例
     IPsam psamIntance = PsamManager.getPsamIntance();
 
 
@@ -127,15 +124,39 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else if (v == btnGetRomdan) {
             if (psamflag == 1) {
                 try {
-                    tvShowData.setText("Psam1 Send data：00 84 00 00 08\n");
+                    tvShowData.setText("Psam1 Send data：00 84 00 00 04\n");
                     byte[] data = psamIntance.WriteCmd(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
-                            0x08}, IPsam
+                            0x04}, IPsam
                             .PowerType.Psam1);
                     if (data != null)
                         tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                    else
+                        return;
+                    //加油卡 应用解锁
+                  /*  byte[] icv = new byte[8];
+                    System.arraycopy(data, 0,icv,0,4);
+                    System.arraycopy(new byte[]{0,0,0,0}, 0,icv,4,4);
+                    byte[] mac = Pboc3DesMACUtils.getMac(icv);
+                    tvShowData.append("\nicv->" + DataConversionUtils.byteArrayToString(icv));
+                    tvShowData.append("\nmac->" + DataConversionUtils.byteArrayToString(mac));
+                    //84180004+mac
+                    byte[] temp = new byte[9];
+                    temp[0] = (byte) 0x84;
+                    temp[1] = 0x18;
+                    temp[2] = 0x00;
+                    temp[3] = 0x00;
+                    temp[4] = 0x04;
+                    System.arraycopy(mac, 0, temp, 5, 4);
+                    tvShowData.append("\nsend->" + DataConversionUtils.byteArrayToString(temp));
+                    data = psamIntance.WriteCmd(temp, IPsam
+                            .PowerType.Psam1);
+                    if (data != null)
+                        tvShowData.append("\nrece->" + DataConversionUtils.byteArrayToString(data));
+                    */
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
+
             } else if (psamflag == 2) {
                 try {
                     tvShowData.setText("Psam2 Send data：00 84 00 00 08\n");
