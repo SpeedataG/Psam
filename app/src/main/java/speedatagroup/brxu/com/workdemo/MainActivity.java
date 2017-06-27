@@ -36,6 +36,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private TextView tvVerson;
     private TextView tvConfig;
     private ImageView imgReset;
+    private Button btnOriginalCmd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +80,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btnSendAdpu = (Button) findViewById(R.id.btn_send_adpu);
         btnClear = (Button) findViewById(R.id.btn_clear);
         tvVerson = (TextView) findViewById(R.id.tv_verson);
+        btnOriginalCmd = (Button) findViewById(R.id.btn_original_cmd);
+        btnOriginalCmd.setOnClickListener(this);
         btn1Activite.setOnClickListener(this);
         btn2Activite.setOnClickListener(this);
         btnGetRomdan.setOnClickListener(this);
@@ -91,6 +94,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         edvADPU.setText("0020000003");
         edvADPU.setText("80f0800008122a31632a3bafe0");
         edvADPU.setText("00A404000BA000000003454E45524759");
+//        edvADPU.setText("aabb0600000002010704");
     }
 
 
@@ -192,6 +196,36 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 tvShowData.setText("Psam2 Send data：\n" + send_data + "\n");
                 try {
                     byte[] data = psamIntance.WriteCmd(DataConversionUtils
+                            .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
+                    if (data != null)
+                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else if (v == btnOriginalCmd) {
+            String temp_cmd = edvADPU.getText().toString();
+            if ("".equals(temp_cmd) || temp_cmd.length() % 2 > 0 || temp_cmd.length() < 4) {
+                Toast.makeText(mContext, "Please enter a valid instruction！", Toast.LENGTH_SHORT)
+                        .show();
+                return;
+            }
+            send_data = temp_cmd;
+            if (psamflag == 1) {
+                tvShowData.setText("Psam1 Send data：\n" + send_data + "\n");
+                try {
+                    byte[] data = psamIntance.WriteOriginalCmd(DataConversionUtils
+                            .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
+                    if (data != null)
+                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+            } else if (psamflag == 2) {
+                tvShowData.setText("Psam2 Send data：\n" + send_data + "\n");
+                try {
+                    byte[] data = psamIntance.WriteOriginalCmd(DataConversionUtils
                             .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
                     if (data != null)
                         tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));

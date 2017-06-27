@@ -7,9 +7,9 @@ public class Pboc3DesMACUtils {
     }
 
     /**
-     * 1.�ȶԿ���ȡ�����ָ�4�ֽں�00000000�ճ�8�ֽڳ�ʼ������
-     * 2.��Ӧ��ά����Կ��8418000004��5���ֽڼ���һ��3desmac����ʼ����Ϊ��һ���õ���8�ֽڣ�
-     * 3.��Ƭ����Ӧ�ý������8418000004+mac��macΪ�ڶ����õ��Ľ��
+     * 1.先对卡做取随机数指令（4字节后补00000000凑成8字节初始向量）
+     * 2.用应用维护密钥对8418000004这5个字节计算一个3desmac，初始向量为第一步得到的8字节；
+     * 3.向卡片发送应用解锁命令，8418000004+mac，mac为第二步得到的结果
      * @param icv
      * @return mac
      */
@@ -32,21 +32,21 @@ public class Pboc3DesMACUtils {
     public static final byte[] ZERO_IVC = new byte[]{0, 0, 0, 0, 0, 0, 0, 0};
 
     /**
-     * ����MAC(hex) PBOC_3DES_MAC(����ISO9797Alg3Mac��׼) (16��������8000000000000000)
-     * ǰn-1��ʹ�õ�����ԿDES ʹ����Կ����Կ����8�ֽڣ� ���1��ʹ��˫����Կ3DES ��ʹ��ȫ��16�ֽ���Կ��
+     * 计算MAC(hex) PBOC_3DES_MAC(符合ISO9797Alg3Mac标准) (16的整数补8000000000000000)
+     * 前n-1组使用单长密钥DES 使用密钥是密钥的左8字节） 最后1组使用双长密钥3DES （使用全部16字节密钥）
      * <p>
-     * �㷨���裺��ʼ����ΪD����ʼ����ΪI��3DES��ԿΪK0����Կ��8�ֽ�DES��ԿK1��
-     * 1������D���鲢����䣺���ֽ�����D���з��飬ÿ��8���ֽڣ�
-     * �����Ŵ�0��ʼ,�ֱ�ΪD0...Dn�����һ�����鲻��8�ֽڵģ������һ���ֽ�80������ȫ�����00
-     * ����8�ֽڵģ�����һ��8�ֽڷ��飨80000000 00000000����
-     * 2������desѭ�����ܣ���1��D0�ͳ�ʼ����I���а�λ���õ����O0;(
-     * 2)ʹ����ԿK1��DES���ܽ��O0�õ����I1,��I1��D1��λ���õ����D1��(3)ѭ���ڶ�����õ����Dn��
-     * 3����Dnʹ��16�ֽ���ԿK0����3DES���ܣ��õ��Ľ����������Ҫ��MAC��
+     * 算法步骤：初始数据为D，初始向量为I，3DES秘钥为K0，秘钥低8字节DES秘钥K1；
+     * 1、数据D分组并且填充：将字节数组D进行分组，每组8个字节，
+     * 分组编号从0开始,分别为D0...Dn；最后一个分组不满8字节的，先填充一个字节80，后续全部填充00
+     * ，满8字节的，新增一个8字节分组（80000000 00000000）；
+     * 2、进行des循环加密：（1）D0和初始向量I进行按位异或得到结果O0;(
+     * 2)使用秘钥K1，DES加密结果O0得到结果I1,将I1和D1按位异或得到结果D1；(3)循环第二步骤得到结果Dn；
+     * 3、将Dn使用16字节秘钥K0进行3DES加密，得到的结果就是我们要的MAC。
      *
-     * @param data �����������
-     * @param key  16�ֽ���Կ
-     * @param icv  �㷨����
-     * @return macǩ��
+     * @param data 带计算的数据
+     * @param key  16字节密钥
+     * @param icv  算法向量
+     * @return mac签名
      * @throws Exception
      */
     public static byte[] calculatePboc3desMAC(byte[] data, byte[] key,
@@ -60,7 +60,7 @@ public class Pboc3DesMACUtils {
         byte[] leftKey = new byte[8];
         System.arraycopy(key, 0, leftKey, 0, 8);
 
-        // ������ݣ�8�ֽڿ�/Block��
+        // 拆分数据（8字节块/Block）
         final int dataLength = data.length;
         final int blockCount = dataLength / 8 + 1;
         final int lastBlockLength = dataLength % 8;

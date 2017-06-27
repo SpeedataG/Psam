@@ -170,6 +170,11 @@ public class Psam3310Realize implements IPsam {
             resetDev(power_type, resetGpio);
     }
 
+    @Override
+    public byte[] WriteOriginalCmd(byte[] data, PowerType type) throws UnsupportedEncodingException {
+        return WriteCmd(data, len, delay);
+    }
+
 
     /**
      * @param cmd  adpu指令

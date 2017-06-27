@@ -47,6 +47,7 @@ public interface IPsam {
 
     public void resetDev(DeviceControl.PowerType type,int Gpio);
     public void resetDev();
+    public byte[] WriteOriginalCmd(byte[] data, PowerType type) throws UnsupportedEncodingException;
 //    /**
 //     * 单次读串口
 //     *

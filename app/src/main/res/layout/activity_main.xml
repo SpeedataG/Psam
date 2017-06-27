@@ -134,14 +134,33 @@
         android:hint="Please input apdu command:"
         android:textSize="20dp"/>
 
-    <Button
-        android:id="@+id/btn_send_adpu"
+    <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_alibuybutton"
-        android:gravity="center"
-        android:text="Send APDU"
-        android:textSize="20dp"/>
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btn_send_adpu"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_alibuybutton"
+            android:gravity="center"
+            android:text="Send APDU"
+            android:layout_marginRight="5dp"
+            android:textSize="15dp"/>
+        <Button
+            android:id="@+id/btn_original_cmd"
+            android:layout_width="fill_parent"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_alibuybutton"
+            android:gravity="center"
+            android:layout_marginTop="10dp"
+            android:textSize="15dp"
+            android:layout_marginLeft="5dp"
+            android:text="SendOriginalCMD"/>
+    </LinearLayout>
+
 
 </LinearLayout>
