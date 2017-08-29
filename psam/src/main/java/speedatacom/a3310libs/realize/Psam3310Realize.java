@@ -142,6 +142,7 @@ public class Psam3310Realize implements IPsam {
             read = unPackage(read);
         return read;
     }
+
     private byte[] WriteCmdWithoutUnpackage(byte[] data, int len, int delay) throws
             UnsupportedEncodingException {
         mSerialPort.WriteSerialByte(fd, data);
@@ -161,16 +162,21 @@ public class Psam3310Realize implements IPsam {
     public void releaseDev() throws IOException {
         mSerialPort.CloseSerial(fd);
         mDeviceControl.PowerOffDevice();
+        if (mDeviceReset != null) {
+            mDeviceReset.PowerOffDevice();
+        }
     }
+
+    private DeviceControl mDeviceReset = null;
 
     @Override
     public void resetDev(DeviceControl.PowerType type, int Gpio) {
-        DeviceControl mDeviceControl = null;
+
         try {
-            mDeviceControl = new DeviceControl(type, Gpio);
-            mDeviceControl.PowerOnDevice();
-            mDeviceControl.PowerOffDevice();
-            mDeviceControl.PowerOnDevice();
+            mDeviceReset = new DeviceControl(type, Gpio);
+            mDeviceReset.PowerOnDevice();
+            mDeviceReset.PowerOffDevice();
+            mDeviceReset.PowerOnDevice();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -94,7 +94,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         edvADPU.setText("0020000003");
         edvADPU.setText("80f0800008122a31632a3bafe0");
         edvADPU.setText("00A404000BA000000003454E45524759");
-//        edvADPU.setText("aabb0600000002010704");
     }
 
 
