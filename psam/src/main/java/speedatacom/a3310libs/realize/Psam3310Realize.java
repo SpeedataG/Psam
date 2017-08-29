@@ -41,7 +41,7 @@ public class Psam3310Realize implements IPsam {
             return null;
         }
         try {
-            return WriteCmd(getPowerCmd(type), 50, 15);
+            return WriteCmdWithoutUnpackage(getPowerCmd(type), 50, 15);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return null;
@@ -140,6 +140,20 @@ public class Psam3310Realize implements IPsam {
         }
         if (read != null)
             read = unPackage(read);
+        return read;
+    }
+    private byte[] WriteCmdWithoutUnpackage(byte[] data, int len, int delay) throws
+            UnsupportedEncodingException {
+        mSerialPort.WriteSerialByte(fd, data);
+        byte[] read = null;
+        long currentTime = System.currentTimeMillis();
+        int count = 0;
+        while (read == null && count < 10) {
+            count++;
+            SystemClock.sleep(5);
+            read = mSerialPort.ReadSerial(fd, len, delay);
+        }
+
         return read;
     }
 
