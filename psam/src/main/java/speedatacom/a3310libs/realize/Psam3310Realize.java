@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
+import android.util.Log;
 
 import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.MyLogger;
@@ -121,6 +122,12 @@ public class Psam3310Realize implements IPsam {
     }
 
     @Override
+    public byte[] WritePsam4442Cmd(byte[] data, PowerType type) throws UnsupportedEncodingException{
+        return WriteCmd(psam4442Packages(data, type), len, delay);
+    }
+
+
+    @Override
     public byte[] WriteCmd(byte[] data, PowerType type, int len, int delay) throws
             UnsupportedEncodingException {
         return WriteCmd(adpuPackages(data, type), len, delay);
@@ -140,6 +147,7 @@ public class Psam3310Realize implements IPsam {
         }
         if (read != null)
             read = unPackage(read);
+        Log.d("sssss", "readCmd: " + count);
         return read;
     }
 
@@ -223,6 +231,7 @@ public class Psam3310Realize implements IPsam {
             case Psam2:
                 result[6] = 0x23;
                 break;
+
         }
         result[7] = 0x06;
         result[result.length - 1] = 0x51;
@@ -242,6 +251,62 @@ public class Psam3310Realize implements IPsam {
         return result;
     }
 
+    /**
+     * psam4442类型卡片
+     * @param cmd
+     * @param type
+     * @return  返回不同结果
+     */
+    private byte[] psam4442Packages(byte[] cmd, PowerType type) {
+        int addCount = 0;
+        for (int j = 0; j < cmd.length; j++) {
+            if (cmd[j] == (byte) 0xaa) {
+                addCount++;
+            }
+        }
+        byte[] result = new byte[cmd.length + 9 + addCount];
+        result[0] = (byte) 0xaa;
+        result[1] = (byte) 0xbb;
+        result[2] = (byte) (cmd.length + 5);
+        result[3] = 0x00;
+        result[4] = 0x00;
+        result[5] = 0x00;
+        switch (type) {
+            case ReadPsam4442:
+                result[6] = 0x33;
+                break;
+            case WritePsam4442:
+                result[6] = 0x34;
+                break;
+            case PwdReadsam44P42:
+                result[6] = 0x36;
+                break;
+            case CheckPwdPsam4442:
+                result[6] = 0x37;
+                break;
+            case ChangePwdPsam4442:
+                result[6] = 0x38;
+                break;
+
+        }
+        result[7] = 0x06;
+        result[result.length - 1] = 0x51;
+        int startCount = 8;
+        for (int i = 0; i < cmd.length; i++) {
+            if (cmd[i] == (byte) 0xaa) {
+                result[startCount] = cmd[i];
+                result[startCount + 1] = 0x00;
+                startCount++;
+            } else {
+                result[startCount] = cmd[i];
+            }
+            startCount++;
+        }
+        //不能这样复制
+//        System.arraycopy(cmd, 0, result, 8, cmd.length);
+        return result;
+
+    }
     public static byte[] unPackage(byte[] cmd) {// 解包
 
         if (cmd == null || cmd.length <= 10) {
@@ -284,6 +349,9 @@ public class Psam3310Realize implements IPsam {
                 break;
             case Psam2:
                 cmd[6] = 0x21;
+                break;
+            case Psam4442On:
+                cmd[6] = 0x31;
                 break;
         }
         return cmd;

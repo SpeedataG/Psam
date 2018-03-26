@@ -12,7 +12,7 @@ import java.io.UnsupportedEncodingException;
 
 public interface IPsam {
     public enum PowerType {
-        Psam1, Psam2
+        Psam1, Psam2,Psam4442On,Psam4442Dwon,ReadPsam4442,WritePsam4442,PwdReadsam44P42,CheckPwdPsam4442,ChangePwdPsam4442
     }
 
     /**
@@ -22,6 +22,7 @@ public interface IPsam {
      * @return
      */
     public byte[] PsamPower(PowerType type);
+
 
 
     /**
@@ -38,14 +39,14 @@ public interface IPsam {
     public void initDev(Context context) throws IOException;
     //阻塞型写入
     public byte[] WriteCmd(byte[] data, PowerType type) throws UnsupportedEncodingException;
-
+    public byte[] WritePsam4442Cmd(byte[] data,PowerType type) throws UnsupportedEncodingException;
     //阻塞型写入
     public byte[] WriteCmd(byte[] data, PowerType type,int len,int delay) throws UnsupportedEncodingException;
 
     //释放设备
     public void releaseDev() throws IOException;
 
-    public void resetDev(DeviceControl.PowerType type,int Gpio);
+    public void resetDev(DeviceControl.PowerType type, int Gpio);
     public void resetDev();
     public byte[] WriteOriginalCmd(byte[] data, PowerType type) throws UnsupportedEncodingException;
 //    /**

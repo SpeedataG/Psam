@@ -3,8 +3,8 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '25.0.1'
+    compileSdkVersion 25
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         minSdkVersion 15
@@ -29,7 +29,7 @@ android {
 def siteUrl = 'https://github.com/EchoXBR/speedata' // 项目的主页
 def gitUrl = 'https://github.com/EchoXBR/speedata.git' // Git仓库的url
 group = "com.speedata" //一般填你唯一的包名
-version = "1.5.0"
+version = "1.5.1"
 install {
     repositories.mavenInstaller {
         // This generates POM.xml with proper parameters
@@ -85,7 +85,18 @@ artifacts {
     // archives javadocJar
     archives sourcesJar
 }
-
+task buildJar(type: Jar, dependsOn: ['build']) {
+//导出的jar文件名称
+    archiveName = 'psam.jar'
+//从哪个目录打包jar
+    from('build/intermediates/classes/debug')
+//导出的jar文件的存放目录（未指定则默认存放在build/libs下）
+//去掉不要的类
+    exclude('com/camare/fingger_print/BuildConfig.class')
+    exclude('com/camare/fingger_print/BuildConfig\$*.class')
+    exclude('**/R.class')
+    exclude('**/R\$*.class')
+}
 Properties properties = new Properties()
 boolean isHasFile = false
 if (project.rootProject.file('local.properties') != null) {
@@ -115,6 +126,5 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testCompile 'junit:junit:4.12'
-    provided 'com.speedata:deivice:1.4.4'
-
+    compile 'com.speedata:deivice:+'
 }
