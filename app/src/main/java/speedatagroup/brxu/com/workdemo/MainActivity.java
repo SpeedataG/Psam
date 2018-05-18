@@ -52,8 +52,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private ImageView imgReset;
     private Button btnOriginalCmd, btn_change_b;
     private SerialPort serialPort;
-    private DeviceControl deviceControl;
     private int ii = 115200;
+    private DeviceControl deviceControl1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,24 +126,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
                 pasm.getPowerType() + " GPIO:" + gpio + " resetGpio:" + pasm.getResetGpio());
-//        tvConfig.append("串口:ttyMT3"  + "  波特率：115200"  + " GPIO:96"  + " resetGpio:98" );
+//        tvConfig.append("串口:ttyMT1" + "  波特率：115200" + " GPIO:67,73" + " resetGpio:68");
     }
 
 
     private void initUI() {
         setContentView(R.layout.activity_main);
-        imgReset = (ImageView) findViewById(R.id.img_reset);
+        imgReset = findViewById(R.id.img_reset);
         imgReset.setOnClickListener(this);
-        tvConfig = (TextView) findViewById(R.id.tv_config);
-        btn1Activite = (Button) findViewById(R.id.btn1_active);
-        btnOpenSerial = (Button) findViewById(R.id.btn_OpenSerial);
-        btn2Activite = (Button) findViewById(R.id.btn2_active);
-        btnGetRomdan = (Button) findViewById(R.id.btn_get_ramdon);
-        btnSendAdpu = (Button) findViewById(R.id.btn_send_adpu);
-        btnClear = (Button) findViewById(R.id.btn_clear);
-        tvVerson = (TextView) findViewById(R.id.tv_verson);
-        btnOriginalCmd = (Button) findViewById(R.id.btn_original_cmd);
-        btn_change_b = (Button) findViewById(R.id.btn_change_b);
+        tvConfig = findViewById(R.id.tv_config);
+        btn1Activite = findViewById(R.id.btn1_active);
+        btnOpenSerial = findViewById(R.id.btn_OpenSerial);
+        btn2Activite = findViewById(R.id.btn2_active);
+        btnGetRomdan = findViewById(R.id.btn_get_ramdon);
+        btnSendAdpu = findViewById(R.id.btn_send_adpu);
+        btnClear = findViewById(R.id.btn_clear);
+        tvVerson = findViewById(R.id.tv_verson);
+        btnOriginalCmd = findViewById(R.id.btn_original_cmd);
+        btn_change_b = findViewById(R.id.btn_change_b);
         btnPsam4442 = findViewById(R.id.btn_get_psam4442);
         btn4442Cmd = findViewById(R.id.btn_4442_cmd);
         btnOpenSerial.setOnClickListener(this);
@@ -174,7 +174,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         if (v == imgReset) {
             psamIntance.resetDev();
-//            psamIntance.resetDev(DeviceControl.PowerType.MAIN,98);
+//            psamIntance.resetDev(DeviceControl.PowerType.MAIN, 68);
         } else if (v == btn1Activite) {
             psamflag = 1;
             byte[] data = psamIntance.PsamPower(IPsam.PowerType.Psam1);
@@ -204,43 +204,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
 
         } else if (v == btnGetRomdan) {
-//            tvShowData.setText("开始\n");
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    Log.d("sssss", "start ");
-//                    final long start = System.currentTimeMillis();
-//                    for (int i = 0; i < 1000; i++) {
-//                        try {
-//                            final byte[] data = psamIntance.WriteCmd(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
-//                                    0x08}, IPsam
-//                                    .PowerType.Psam1);
-//                            if (data != null) {runOnUiThread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data) + "\n");
-//                                }
-//                            });
-//                                continue;
-//                            }
-//                        } catch (UnsupportedEncodingException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-////                            tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data) + "\n");
-//                            long stop = System.currentTimeMillis();
-//                            long result = (stop - start) / 1000;
-//                            tvShowData.setText("用时：" + result);
-//                        }
-//                    });
-//                    Log.d("sssss", "stop");
-//                }
-//            }).start();
-
-
             if (psamflag == 1) {
 
                 try {
@@ -272,11 +235,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         } else if (v == btnSendAdpu) {
             String temp_cmd = edvADPU.getText().toString();
-            if ("".equals(temp_cmd) || temp_cmd.length() % 2 > 0 || temp_cmd.length() < 4) {
-                Toast.makeText(mContext, "Please enter a valid instruction！", Toast.LENGTH_SHORT)
-                        .show();
-                return;
-            }
+//            if ("".equals(temp_cmd) || temp_cmd.length() % 2 > 0 || temp_cmd.length() < 4) {
+//                Toast.makeText(mContext, "Please enter a valid instruction！", Toast.LENGTH_SHORT)
+//                        .show();
+//                return;
+//            }
             send_data = temp_cmd;
             if (psamflag == 1) {
                 tvShowData.setText("Psam1 Send data：\n" + send_data + "\n");
@@ -531,9 +494,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void initDevice() {
         try {
             psamIntance.initDev(this);//初始化设备
-//            psamIntance.initDev("ttyMT3",115200, DeviceControl.PowerType.MAIN,this,96);
-//            psamIntance.resetDev(DeviceControl.PowerType.MAIN,98);
             psamIntance.resetDev();//复位
+//            deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN);
+//            deviceControl1=new DeviceControl("/sys/class/misc/mtgpio/pin");
+//            psamIntance.initDev("ttyMT1", 115200, DeviceControl.PowerType.MAIN, this, 67);
+//            deviceControl1.setMode(67, 0);
+//            deviceControl1.setMode(68, 0);
+//            deviceControl1.setDir(67,1,"/sys/class/misc/mtgpio/pin");
+//            deviceControl1.setDir(68,1,"/sys/class/misc/mtgpio/pin");
+//            deviceControl1.MainPowerOn(73);
+//            deviceControl1.MainPowerOn(67);
+//            psamIntance.resetDev(DeviceControl.PowerType.MAIN, 68);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(0);
@@ -544,6 +515,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onDestroy() {
         super.onDestroy();
         try {
+//            deviceControl1.MainPowerOff(67);
+//            deviceControl1.MainPowerOff(73);
             psamIntance.releaseDev();
         } catch (IOException e) {
             e.printStackTrace();
