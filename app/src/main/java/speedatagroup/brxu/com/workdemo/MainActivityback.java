@@ -12,7 +12,7 @@
 //import android.os.Handler;
 //import android.os.Message;
 //import android.os.SystemClock;
-//import android.serialport.DeviceControl;
+//import android.serialport.DeviceControl2;
 //import android.serialport.SerialPort;
 //import android.text.method.ScrollingMovementMethod;
 //import android.view.View;
@@ -47,7 +47,7 @@
 //    private SerialPort mSerialPort;
 //    private int fd;
 //    private int psamflag = 0;
-//    private DeviceControl mDeviceControl;
+//    private DeviceControl2 mDeviceControl;
 //    private Context mContext;
 //    private Timer timer;
 //    private int gpio;
@@ -71,7 +71,7 @@
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-////        psamIntance.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+////        psamIntance.initDev(serialport, baurate, DeviceControl2.PowerType.MAIN_AND_EXPAND,
 ////                this, 88, 2);
 //        runOnUiThread(new Runnable() {
 //            @Override
@@ -270,7 +270,7 @@
 //        } else if (v == btnClear) {
 //            tvShowData.setText("");
 //        } else if (v == btnReSet) {
-//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND, 1);
+//            psamIntance.resetDev(DeviceControl2.PowerType.EXPAND, 1);
 //        } else if (v == btnPower) {
 //            PowerOpenDev();
 //        }
@@ -280,7 +280,7 @@
 //    private String serialport = "ttyMT2";
 //
 //    private void initDevice() {
-////        psamIntance.initDev(serialport, baurate, DeviceControl.PowerType.MAIN_AND_EXPAND,
+////        psamIntance.initDev(serialport, baurate, DeviceControl2.PowerType.MAIN_AND_EXPAND,
 ////                this, 88,2);
 //        try {
 //            psamIntance.initDev(this);

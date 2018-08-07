@@ -25,6 +25,7 @@ public class Psam3310Realize implements IPsam {
     private DeviceControl mDeviceControl;
     private MyLogger logger = MyLogger.jLog();
     private int fd;
+    private boolean fla = true;
     private Context mContext;
     //    private boolean isPower = false;
     PowerType type;
@@ -61,6 +62,17 @@ public class Psam3310Realize implements IPsam {
         mDeviceControl.PowerOnDevice();
     }
 
+    @Override
+    public void initDev(String serialport, int braut, Context context) throws IOException {
+        mContext = context;
+        mSerialPort = new SerialPort();
+        mSerialPort.OpenSerial("/dev/" + serialport, braut);
+        fd = mSerialPort.getFd();
+        logger.d("--onCreate--open-serial=" + fd);
+        fla = false;
+    }
+
+
     private int resetGpio = 1;
     private DeviceControl.PowerType power_type = DeviceControl.PowerType.MAIN;
 
@@ -89,6 +101,15 @@ public class Psam3310Realize implements IPsam {
                     break;
                 case "EXPAND":
                     power_type = DeviceControl.PowerType.EXPAND;
+                    break;
+                case "NEW_MAIN":
+                    this.power_type = DeviceControl.PowerType.NEW_MAIN;
+                    break;
+                case "EXPAND2":
+                    this.power_type = DeviceControl.PowerType.EXPAND2;
+                    break;
+                case "MAIN_AND_EXPAND2":
+                    this.power_type = DeviceControl.PowerType.MAIN_AND_EXPAND2;
                     break;
                 default:
                     power_type = DeviceControl.PowerType.MAIN;
@@ -122,7 +143,7 @@ public class Psam3310Realize implements IPsam {
     }
 
     @Override
-    public byte[] WritePsam4442Cmd(byte[] data, PowerType type) throws UnsupportedEncodingException{
+    public byte[] WritePsam4442Cmd(byte[] data, PowerType type) throws UnsupportedEncodingException {
         return WriteCmd(psam4442Packages(data, type), len, delay);
     }
 
@@ -169,7 +190,9 @@ public class Psam3310Realize implements IPsam {
     @Override
     public void releaseDev() throws IOException {
         mSerialPort.CloseSerial(fd);
-        mDeviceControl.PowerOffDevice();
+        if (fla) {
+            mDeviceControl.PowerOffDevice();
+        }
         if (mDeviceReset != null) {
             mDeviceReset.PowerOffDevice();
         }
@@ -253,9 +276,10 @@ public class Psam3310Realize implements IPsam {
 
     /**
      * psam4442类型卡片
+     *
      * @param cmd
      * @param type
-     * @return  返回不同结果
+     * @return 返回不同结果
      */
     private byte[] psam4442Packages(byte[] cmd, PowerType type) {
         int addCount = 0;
@@ -307,6 +331,7 @@ public class Psam3310Realize implements IPsam {
         return result;
 
     }
+
     public static byte[] unPackage(byte[] cmd) {// 解包
 
         if (cmd == null || cmd.length <= 10) {

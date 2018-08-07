@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "com.cc3310"
@@ -20,15 +20,15 @@ android {
 }
 
 dependencies {
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     implementation 'com.android.support:appcompat-v7:26.1.0'
-    compile files('libs/orm.jar')
-    compile project(':psam')
-//    compile 'com.speedata:deivice:1.4.9'
-//    compile 'com.speedata:psam:1.4.8'
+    implementation 'com.speedata:deivice:1.5.8'
+    //    compile 'com.speedata:psam:1.4.8'
     //友盟sdk添加
-    compile 'com.umeng.analytics:analytics:latest.integration'
+    implementation 'com.umeng.analytics:analytics:latest.integration'
     //6.0权限添加三方库
-    compile 'com.yanzhenjie:permission:1.1.2'
+    implementation 'com.yanzhenjie:permission:1.1.2'
+    implementation project(':psam')
 }

@@ -15,7 +15,6 @@ import android.support.annotation.NonNull;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -39,8 +38,7 @@ import java.util.List;
 import speedatacom.a3310libs.PsamManager;
 import speedatacom.a3310libs.inf.IPsam;
 
-public class MainActivity extends Activity implements View.OnClickListener {
-
+public class Main2Activity extends Activity implements View.OnClickListener {
     //19200 9600
     private Button btn1Activite, btn2Activite, btnGetRomdan,
             btnSendAdpu, btnClear, btnOpenSerial, btnPsam4442, btn4442Cmd;
@@ -56,10 +54,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private int ii = 115200;
     private DeviceControl deviceControl1;
     private DeviceControl2 control;
+    private DeviceControl control1;
+    private DeviceControl deviceControl12;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
         mContext = this;
@@ -79,7 +78,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         AndPermission.with(this).permission(Manifest.permission.READ_PHONE_STATE).callback(listener).rationale(new RationaleListener() {
             @Override
             public void showRequestPermissionRationale(int requestCode, Rationale rationale) {
-                AndPermission.rationaleDialog(MainActivity.this, rationale).show();
+                AndPermission.rationaleDialog(Main2Activity.this, rationale).show();
             }
         }).start();
     }
@@ -93,8 +92,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         @Override
         public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
             // 用户否勾选了不再提示并且拒绝了权限，那么提示用户到设置中授权。
-            if (AndPermission.hasAlwaysDeniedPermission(MainActivity.this, deniedPermissions)) {
-                AndPermission.defaultSettingDialog(MainActivity.this, 300).show();
+            if (AndPermission.hasAlwaysDeniedPermission(Main2Activity.this, deniedPermissions)) {
+                AndPermission.defaultSettingDialog(Main2Activity.this, 300).show();
             }
         }
     };
@@ -128,12 +127,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
 //        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
 //                pasm.getPowerType() + " GPIO:" + gpio + " resetGpio:" + pasm.getResetGpio());
-        tvConfig.append("串口:ttyMT2" + "  波特率：115200" + " EXGPIO:94" + " resetGpio:122,93");
+        tvConfig.append("串口:ttyMT1" + "  波特率：115200" + " gpio:93" + " resetGpio:94");
     }
 
 
     private void initUI() {
-
         imgReset = findViewById(R.id.img_reset);
         imgReset.setOnClickListener(this);
         tvConfig = findViewById(R.id.tv_config);
@@ -158,9 +156,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btnClear.setOnClickListener(this);
         btnPsam4442.setOnClickListener(this);
         btn4442Cmd.setOnClickListener(this);
-        tvShowData =  findViewById(R.id.tv_show_message);
+        tvShowData = findViewById(R.id.tv_show_message);
         tvShowData.setMovementMethod(ScrollingMovementMethod.getInstance());
-        edvADPU =  findViewById(R.id.edv_adpu_cmd);
+        edvADPU = findViewById(R.id.edv_adpu_cmd);
         edvADPU.setText("00A404000BA000000003454E45524759");
     }
 
@@ -169,7 +167,40 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private IPsam psamIntance = PsamManager.getPsamIntance();
 
     private void initDevice() {
+        try {
+//            psamIntance.initDev(this);//初始化设备
+//            psamIntance.resetDev();//复位
+            //sd55
+            psamIntance.initDev("ttyMT1", 115200, this);
+            deviceControl1 = new DeviceControl(DeviceControl.PowerType.NEW_MAIN, 16);
+            deviceControl1.PowerOnDevice();
+            psamIntance.resetDev(DeviceControl.PowerType.NEW_MAIN, 23);
 
+            //sd55l
+//            psamIntance.initDev("ttyMT1", 115200, this);
+//            deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN, 93);
+//            deviceControl1.PowerOnDevice();
+//            psamIntance.resetDev(DeviceControl.PowerType.MAIN, 94);
+            //sk80 psam 1
+//            psamIntance.initDev("ttyMT1", 115200, this);
+//            deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN);
+//            deviceControl1.MainPowerOn(85);
+//            DeviceControl deviceControl12 = new DeviceControl(DeviceControl.PowerType.EXPAND2);
+//            deviceControl12.Expand2PowerOff(7);
+//            control1 = new DeviceControl(DeviceControl.PowerType.EXPAND);
+//            control1.ExpandPowerOn(4);
+//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND, 12);
+
+            //sk80psam2
+//            psamIntance.initDev("ttyMT2", 115200, this);
+//            deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN_AND_EXPAND2, 85, 5);
+//            deviceControl1.PowerOnDevice();
+//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 6);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "psam初始化失败！！！", Toast.LENGTH_SHORT).show();
+            System.exit(0);
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -177,11 +208,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         if (v == imgReset) {
 //            psamIntance.resetDev();
-            psamIntance.resetDev(DeviceControl.PowerType.MAIN, 94);
-            //sk80 复位
-//            control.ExpandPowerOn(6);
-//            control.ExpandPowerOff(6);
-//            control.ExpandPowerOn(6);
+            //sk80psam1
+//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND, 12);
+            //sk80 psam2
+//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 6);
+            //sd55l
+//            psamIntance.resetDev(DeviceControl.PowerType.MAIN, 94);
+            //sd55
+            psamIntance.resetDev(DeviceControl.PowerType.NEW_MAIN, 23);
         } else if (v == btn1Activite) {
             psamflag = 1;
             byte[] data = psamIntance.PsamPower(IPsam.PowerType.Psam1);
@@ -321,7 +355,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         final String[] items = {"上电", "下电", "读卡", "写卡", "读密", "核密", "修密"};
         yourChoice = -1;
         AlertDialog.Builder singleChoiceDialog =
-                new AlertDialog.Builder(MainActivity.this);
+                new AlertDialog.Builder(Main2Activity.this);
         singleChoiceDialog.setTitle("4442卡片指令");
         // 第二个参数是默认选项，此处设置为0
         singleChoiceDialog.setSingleChoiceItems(items, -1,
@@ -398,7 +432,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             if (data != null)
                                 tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
                             else
-                                Toast.makeText(MainActivity.this,
+                                Toast.makeText(Main2Activity.this,
                                         "请检查指令",
                                         Toast.LENGTH_SHORT).show();
                         }
@@ -504,9 +538,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onDestroy() {
         super.onDestroy();
         try {
-//            control.ExpandPowerOff(5);
-            deviceControl1.MainPowerOff(122);
-            deviceControl1.MainPowerOff(93);
+            deviceControl1.PowerOffDevice();
+//            deviceControl12.PowerOffDevice();
             psamIntance.releaseDev();
         } catch (IOException e) {
             e.printStackTrace();
@@ -528,19 +561,4 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-//    public void test() {
-//        String cmd = "$FFFFFFFFFFFF,11,,05\r";
-//        SerialPort serialPort = new SerialPort();
-//        try {
-//            serialPort.OpenSerial(SerialPort.SERIAL_TTYMT0, 115200);
-//            byte[] cmds = cmd.getBytes();
-//            serialPort.WriteSerialByte(serialPort.getFd(), cmd.getBytes());
-//            SystemClock.sleep(200);
-//            byte[] resulet = serialPort.ReadSerial(serialPort.getFd(), 1024);
-//            String ss = DataConversionUtils.byteArrayToAscii(resulet);
-//            Log.i("adad", "test: "+ss);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 }
