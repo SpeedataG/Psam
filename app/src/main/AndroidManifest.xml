@@ -22,7 +22,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".Main2Activity">
+        <activity android:name=".Main2Activity"
+         >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -37,7 +38,6 @@
             android:name="UMENG_CHANNEL"
             android:value="psam" />
 
-        <activity android:name=".MainActivity"></activity>
     </application>
 
 </manifest>

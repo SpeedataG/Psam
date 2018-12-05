@@ -3,12 +3,12 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 27
     buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 19
+        minSdkVersion 19
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -29,7 +29,7 @@ android {
 def siteUrl = 'https://github.com/EchoXBR/speedata' // 项目的主页
 def gitUrl = 'https://github.com/EchoXBR/speedata.git' // Git仓库的url
 group = "com.speedata" //一般填你唯一的包名
-version = "1.5.2"
+version = "1.5.3"
 install {
     repositories.mavenInstaller {
         // This generates POM.xml with proper parameters
@@ -121,10 +121,11 @@ bintray {
 
 
 dependencies {
-    api fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    api fileTree(include: ['*.jar','*.aar'], dir: 'libs')
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    testCompile 'junit:junit:4.12'
-    implementation 'com.speedata:deivice:1.5.8'
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.alibaba:fastjson:1.2.24'
+    api 'com.speedata:deivice:1.6.0'
 }

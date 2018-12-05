@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="speedatagroup.brxu.com.workdemo.Main2Activity">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,13 +25,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:gravity="top"
-            android:paddingRight="15dp"
             android:paddingBottom="5dp"
+            android:paddingRight="15dp"
             android:text="V1.1"
             android:textSize="10sp" />
-
-
     </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -58,8 +57,8 @@
             <TextView
                 android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/img_reset"
                 android:layout_alignParentRight="true"
+                android:layout_below="@id/img_reset"
                 android:gravity="center"
                 android:text="reset" />
         </RelativeLayout>
@@ -161,8 +160,8 @@
             android:id="@+id/btn_send_adpu"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:layout_marginRight="5dp"
+            android:layout_marginTop="10dp"
             android:layout_weight="1"
             android:background="@drawable/bg_alibuybutton"
             android:gravity="center"

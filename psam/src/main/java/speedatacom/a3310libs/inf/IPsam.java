@@ -58,7 +58,8 @@ public interface IPsam {
     //释放设备
     public void releaseDev() throws IOException;
 
-    public void resetDev(DeviceControl.PowerType type, int Gpio);
+    public void resetDev(DeviceControl.PowerType type, int gpio);
+    public void resetGtDev( String [] gpio);
 
     public void resetDev();
 

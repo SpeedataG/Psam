@@ -2,9 +2,11 @@ package speedatacom.a3310libs.realize;
 
 import android.content.Context;
 import android.os.SystemClock;
+
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 import android.util.Log;
+
 
 import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.MyLogger;
@@ -111,6 +113,16 @@ public class Psam3310Realize implements IPsam {
                 case "MAIN_AND_EXPAND2":
                     this.power_type = DeviceControl.PowerType.MAIN_AND_EXPAND2;
                     break;
+                case "GAOTONG_MAIN":
+                    this.power_type = DeviceControl.PowerType.GAOTONG_MAIN;
+                    List<String> gtGpio = pasm.getGtGpio();
+                    String[] gpios = new String[gtGpio.size()];
+                    for (int i = 0; i < gtGpio.size(); i++) {
+                        gpios[i] = gtGpio.get(i);
+                    }
+                    mDeviceControl = new DeviceControl(DeviceControl.POWER_GAOTONG, gpios);
+                    mDeviceControl.PowerOnDevice();
+                    return;
                 default:
                     power_type = DeviceControl.PowerType.MAIN;
                     break;
@@ -204,6 +216,7 @@ public class Psam3310Realize implements IPsam {
     public void resetDev(DeviceControl.PowerType type, int Gpio) {
 
         try {
+
             mDeviceReset = new DeviceControl(type, Gpio);
             mDeviceReset.PowerOnDevice();
             mDeviceReset.PowerOffDevice();
@@ -214,11 +227,19 @@ public class Psam3310Realize implements IPsam {
     }
 
     @Override
+    public void resetGtDev(String[] gpio) {
+        mDeviceControl.gtPower(gpio[0]);
+        mDeviceControl.gtPower(gpio[1]);
+        mDeviceControl.gtPower(gpio[0]);
+    }
+
+    @Override
     public void resetDev() {
-        if (power_type.equals(DeviceControl.PowerType.MAIN_AND_EXPAND))
+        if (power_type.equals(DeviceControl.PowerType.MAIN_AND_EXPAND)) {
             resetDev(DeviceControl.PowerType.EXPAND, resetGpio);
-        else
+        } else {
             resetDev(power_type, resetGpio);
+        }
     }
 
     @Override
@@ -253,6 +274,8 @@ public class Psam3310Realize implements IPsam {
                 break;
             case Psam2:
                 result[6] = 0x23;
+                break;
+            default:
                 break;
 
         }
@@ -310,6 +333,8 @@ public class Psam3310Realize implements IPsam {
                 break;
             case ChangePwdPsam4442:
                 result[6] = 0x38;
+                break;
+            default:
                 break;
 
         }
@@ -378,6 +403,10 @@ public class Psam3310Realize implements IPsam {
             case Psam4442On:
                 cmd[6] = 0x31;
                 break;
+            default:
+
+                break;
+
         }
         return cmd;
     }
