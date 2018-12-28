@@ -3,15 +3,19 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 28
+//    buildToolsVersionsion '27.0.3'
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters 'armeabi'
+//            ldLibs "log"//实现__android_log_print
+        }
     }
     buildTypes {
         release {
@@ -121,11 +125,15 @@ bintray {
 
 
 dependencies {
-    api fileTree(include: ['*.jar','*.aar'], dir: 'libs')
+    api fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testImplementation 'junit:junit:4.12'
-    implementation 'com.alibaba:fastjson:1.2.24'
-    api 'com.speedata:deivice:1.6.0'
+    implementation 'com.alibaba:fastjson:1.2.54'
+    compileOnly 'com.github.SpeedataG:Device:1.6.3'
+
+
+//    compileSdkVersionpileOnly 'com.speedata:deivice:1.6.0'
+//    implementation 'com.speedata:libid2:2.5.7'
 }

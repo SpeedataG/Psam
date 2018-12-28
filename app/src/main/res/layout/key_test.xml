@@ -1,23 +1,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <include
+        layout="xxx"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        layout="xxx" />
+        android:layout_height="wrap_content" />
+
     <EditText
         android:id="@+id/edv_key_input"
-        android:layout_marginTop="10dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:maxLength="60"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
-        <requestFocus/>
-        </EditText>
+        android:layout_marginTop="10dp"
+        android:maxLength="60">
+
+        <requestFocus />
+    </EditText>
 
     <GridLayout
         android:layout_width="fill_parent"
@@ -28,7 +29,7 @@
         android:columnCount="4"
         android:orientation="horizontal"
         android:rowCount="6"
-        android:useDefaultMargins="true" >
+        android:useDefaultMargins="true">
 
         <Button
             android:id="@+id/bv_key_scan"
@@ -96,8 +97,8 @@
 
         <Button
             android:id="@+id/bv_key_menu"
-            android:layout_gravity="fill"
             android:layout_columnSpan="2"
+            android:layout_gravity="fill"
             android:background="@color/red"
             android:text="menu" />
 
@@ -180,7 +181,7 @@
 
     <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent">
 
         <ImageView
             android:id="@+id/imv_click_me"
@@ -189,8 +190,7 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:layout_marginBottom="20dp"
-            android:layout_marginRight="20dp"
-            />
+            android:layout_marginRight="20dp" />
 
         <TextView
             android:layout_width="wrap_content"

@@ -1,7 +1,7 @@
 package speedatacom.a3310libs.inf;
 
 import android.content.Context;
-import android.serialport.DeviceControl;
+import android.serialport.DeviceControlSpd;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -32,7 +32,7 @@ public interface IPsam {
      * @param power_typeint 上电类型 主板 或外部 或主板和外部
      * @param gpio
      */
-    public void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint,
+    public void initDev(String serialport, int braut, DeviceControlSpd.PowerType power_typeint,
                         Context context, int... gpio) throws IOException;
 
     /**
@@ -58,7 +58,7 @@ public interface IPsam {
     //释放设备
     public void releaseDev() throws IOException;
 
-    public void resetDev(DeviceControl.PowerType type, int gpio);
+    public void resetDev(DeviceControlSpd.PowerType type, int gpio);
     public void resetGtDev( String [] gpio);
 
     public void resetDev();

@@ -2,11 +2,9 @@ package speedatacom.a3310libs.realize;
 
 import android.content.Context;
 import android.os.SystemClock;
-
-import android.serialport.DeviceControl;
-import android.serialport.SerialPort;
+import android.serialport.DeviceControlSpd;
+import android.serialport.SerialPortSpd;
 import android.util.Log;
-
 
 import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.MyLogger;
@@ -23,8 +21,8 @@ import speedatacom.a3310libs.inf.IPsam;
  */
 
 public class Psam3310Realize implements IPsam {
-    private SerialPort mSerialPort;
-    private DeviceControl mDeviceControl;
+    private SerialPortSpd mSerialPort;
+    private DeviceControlSpd mDeviceControlSpd;
     private MyLogger logger = MyLogger.jLog();
     private int fd;
     private boolean fla = true;
@@ -53,21 +51,21 @@ public class Psam3310Realize implements IPsam {
     }
 
     @Override
-    public void initDev(String serialport, int braut, DeviceControl.PowerType power_typeint,
+    public void initDev(String serialport, int braut, DeviceControlSpd.PowerType power_typeint,
                         Context context, int... gpio) throws IOException {
         mContext = context;
-        mSerialPort = new SerialPort();
+        mSerialPort = new SerialPortSpd();
         mSerialPort.OpenSerial("/dev/" + serialport, braut);
         fd = mSerialPort.getFd();
         logger.d("--onCreate--open-serial=" + fd);
-        mDeviceControl = new DeviceControl(power_typeint, gpio);
-        mDeviceControl.PowerOnDevice();
+        mDeviceControlSpd = new DeviceControlSpd(power_typeint, gpio);
+        mDeviceControlSpd.PowerOnDevice();
     }
 
     @Override
     public void initDev(String serialport, int braut, Context context) throws IOException {
         mContext = context;
-        mSerialPort = new SerialPort();
+        mSerialPort = new SerialPortSpd();
         mSerialPort.OpenSerial("/dev/" + serialport, braut);
         fd = mSerialPort.getFd();
         logger.d("--onCreate--open-serial=" + fd);
@@ -76,7 +74,7 @@ public class Psam3310Realize implements IPsam {
 
 
     private int resetGpio = 1;
-    private DeviceControl.PowerType power_type = DeviceControl.PowerType.MAIN;
+    private DeviceControlSpd.PowerType power_type = DeviceControlSpd.PowerType.MAIN;
 
     @Override
     public void initDev(Context context) throws IOException {
@@ -85,7 +83,7 @@ public class Psam3310Realize implements IPsam {
         if (readBean == null) {
             throw new IOException();
         } else {
-            mSerialPort = new SerialPort();
+            mSerialPort = new SerialPortSpd();
 //        try {
             ReadBean.PasmBean pasm = readBean.getPasm();
             mSerialPort.OpenSerial(pasm.getSerialPort(), pasm.getBraut());
@@ -96,35 +94,35 @@ public class Psam3310Realize implements IPsam {
 
             switch (type) {
                 case "MAIN":
-                    power_type = DeviceControl.PowerType.MAIN;
+                    power_type = DeviceControlSpd.PowerType.MAIN;
                     break;
                 case "MAIN_AND_EXPAND":
-                    power_type = DeviceControl.PowerType.MAIN_AND_EXPAND;
+                    power_type = DeviceControlSpd.PowerType.MAIN_AND_EXPAND;
                     break;
                 case "EXPAND":
-                    power_type = DeviceControl.PowerType.EXPAND;
+                    power_type = DeviceControlSpd.PowerType.EXPAND;
                     break;
                 case "NEW_MAIN":
-                    this.power_type = DeviceControl.PowerType.NEW_MAIN;
+                    this.power_type = DeviceControlSpd.PowerType.NEW_MAIN;
                     break;
                 case "EXPAND2":
-                    this.power_type = DeviceControl.PowerType.EXPAND2;
+                    this.power_type = DeviceControlSpd.PowerType.EXPAND2;
                     break;
                 case "MAIN_AND_EXPAND2":
-                    this.power_type = DeviceControl.PowerType.MAIN_AND_EXPAND2;
+                    this.power_type = DeviceControlSpd.PowerType.MAIN_AND_EXPAND2;
                     break;
                 case "GAOTONG_MAIN":
-                    this.power_type = DeviceControl.PowerType.GAOTONG_MAIN;
-                    List<String> gtGpio = pasm.getGtGpio();
+                    this.power_type = DeviceControlSpd.PowerType.GAOTONG_MAIN;
+                    List<String> gtGpio = pasm.getGpioStr();
                     String[] gpios = new String[gtGpio.size()];
                     for (int i = 0; i < gtGpio.size(); i++) {
                         gpios[i] = gtGpio.get(i);
                     }
-                    mDeviceControl = new DeviceControl(DeviceControl.POWER_GAOTONG, gpios);
-                    mDeviceControl.PowerOnDevice();
+                    mDeviceControlSpd = new DeviceControlSpd(DeviceControlSpd.POWER_GAOTONG, gpios);
+                    mDeviceControlSpd.PowerOnDevice();
                     return;
                 default:
-                    power_type = DeviceControl.PowerType.MAIN;
+                    power_type = DeviceControlSpd.PowerType.MAIN;
                     break;
             }
             List<Integer> gpio = pasm.getGpio();
@@ -132,8 +130,8 @@ public class Psam3310Realize implements IPsam {
             for (int i = 0; i < gpio.size(); i++) {
                 gpios[i] = gpio.get(i);
             }
-            mDeviceControl = new DeviceControl(power_type, gpios);
-            mDeviceControl.PowerOnDevice();
+            mDeviceControlSpd = new DeviceControlSpd(power_type, gpios);
+            mDeviceControlSpd.PowerOnDevice();
         }
     }
 
@@ -178,8 +176,9 @@ public class Psam3310Realize implements IPsam {
             SystemClock.sleep(5);
             read = mSerialPort.ReadSerial(fd, len, delay);
         }
-        if (read != null)
+        if (read != null) {
             read = unPackage(read);
+        }
         Log.d("sssss", "readCmd: " + count);
         return read;
     }
@@ -203,21 +202,21 @@ public class Psam3310Realize implements IPsam {
     public void releaseDev() throws IOException {
         mSerialPort.CloseSerial(fd);
         if (fla) {
-            mDeviceControl.PowerOffDevice();
+            mDeviceControlSpd.PowerOffDevice();
         }
         if (mDeviceReset != null) {
             mDeviceReset.PowerOffDevice();
         }
     }
 
-    private DeviceControl mDeviceReset = null;
+    private DeviceControlSpd mDeviceReset = null;
 
     @Override
-    public void resetDev(DeviceControl.PowerType type, int Gpio) {
+    public void resetDev(DeviceControlSpd.PowerType type, int Gpio) {
 
         try {
 
-            mDeviceReset = new DeviceControl(type, Gpio);
+            mDeviceReset = new DeviceControlSpd(type, Gpio);
             mDeviceReset.PowerOnDevice();
             mDeviceReset.PowerOffDevice();
             mDeviceReset.PowerOnDevice();
@@ -228,15 +227,15 @@ public class Psam3310Realize implements IPsam {
 
     @Override
     public void resetGtDev(String[] gpio) {
-        mDeviceControl.gtPower(gpio[0]);
-        mDeviceControl.gtPower(gpio[1]);
-        mDeviceControl.gtPower(gpio[0]);
+        mDeviceControlSpd.gtPower(gpio[0]);
+        mDeviceControlSpd.gtPower(gpio[1]);
+        mDeviceControlSpd.gtPower(gpio[0]);
     }
 
     @Override
     public void resetDev() {
-        if (power_type.equals(DeviceControl.PowerType.MAIN_AND_EXPAND)) {
-            resetDev(DeviceControl.PowerType.EXPAND, resetGpio);
+        if (power_type.equals(DeviceControlSpd.PowerType.MAIN_AND_EXPAND)) {
+            resetDev(DeviceControlSpd.PowerType.EXPAND, resetGpio);
         } else {
             resetDev(power_type, resetGpio);
         }
