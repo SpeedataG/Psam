@@ -64,31 +64,7 @@ public interface IPsam {
     public void resetDev();
 
     public byte[] WriteOriginalCmd(byte[] data, PowerType type) throws UnsupportedEncodingException;
-//    /**
-//     * 单次读串口
-//     *
-//     * @param len 最大长度
-//     * @return 返回串口数据
-//     */
-//    public byte[] receData(int len);
-//
-//    /**
-//     * 发送数据
-//     *
-//     * @param data
-//     * @return
-//     */
-//    public int sendData(byte[] data, PowerType type);
-//
-//    /**
-//     * 开启读线程
-//     */
-//    public void startReadThread(Handler handler);
-//
-//    /**
-//     * 停止读线程
-//     */
-//    public void stopReadThread();
+
 
 
 }

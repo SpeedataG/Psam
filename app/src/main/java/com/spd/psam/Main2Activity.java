@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -16,7 +17,6 @@ import android.support.annotation.NonNull;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -25,6 +25,7 @@ import android.widget.Toast;
 import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.DataConversionUtils;
 import com.speedata.libutils.ReadBean;
+import com.speedata.utils.ProgressDialogUtils;
 import com.umeng.analytics.MobclickAgent;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.PermissionListener;
@@ -40,46 +41,11 @@ import speedatacom.a3310libs.PsamManager;
 import speedatacom.a3310libs.inf.IPsam;
 
 public class Main2Activity extends Activity implements View.OnClickListener {
-    private Button btn1Activite, btn2Activite, btnGetRomdan,
-            btnSendAdpu, btnClear, btnOpenSerial, btnPsam4442, btn4442Cmd;
-    private EditText edvADPU;
-    private TextView tvShowData;
-    private int psamflag = 0;
-    private Context mContext;
-    private TextView tvVerson;
-    private TextView tvConfig;
-    private TextView imgReset;
-    private Button btnOriginalCmd, btnChangeB;
-    private SerialPortSpd serialPort;
-    private DeviceControlSpd deviceControl1;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main2);
-        mContext = this;
-        initUI();
-        showConfig();
-        initDevice();
-        serialPort = new SerialPortSpd();
-        edvADPU.clearFocus();
-//        permission(permiss);
-    }
-
+    public ReadBean.PasmBean psam;
     String[] permiss = {"android.permission.ACCESS_NETWORK_STATE"
             , "android.permission.ACCESS_WIFI_STATE"
             , "android.permission.READ_PHONE_STATE"
             , "android.permission.INTERNET"};
-
-    private void permission(String[] permiss) {
-        AndPermission.with(this).permission(Manifest.permission.READ_PHONE_STATE).callback(listener).rationale(new RationaleListener() {
-            @Override
-            public void showRequestPermissionRationale(int requestCode, Rationale rationale) {
-                AndPermission.rationaleDialog(Main2Activity.this, rationale).show();
-            }
-        }).start();
-    }
-
     PermissionListener listener = new PermissionListener() {
         @Override
         public void onSucceed(int requestCode, @NonNull List<String> grantPermissions) {
@@ -94,6 +60,63 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             }
         }
     };
+    String send_data = "";
+    int yourChoice;
+    private Button btn1Activite, btn2Activite, btnGetRomdan,
+            btnSendAdpu, btnClear, btnOpenSerial, btnPsam4442, btn4442Cmd;
+    private EditText edvADPU;
+    private TextView tvShowData;
+    private int psamflag = 0;
+    private Context mContext;
+    private TextView tvVerson;
+    private TextView tvConfig;
+    private TextView imgReset;
+    private Button btnOriginalCmd, btnChangeB;
+    private SerialPortSpd serialPort;
+    private DeviceControlSpd deviceControl1;
+    //获取psam实例
+    private IPsam psamIntance = PsamManager.getPsamIntance();
+
+    /**
+     * 截取数组
+     *
+     * @param bytes
+     *         被截取数组
+     * @param start
+     *         被截取数组开始截取位置
+     * @param length
+     *         新数组的长度
+     *
+     * @return 新数组
+     */
+    public static byte[] cutBytes(byte[] bytes, int start, int length) {
+        byte[] res = new byte[length];
+        System.arraycopy(bytes, start, res, 0, length);
+        return res;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main2);
+        mContext = this;
+        initUI();
+        showConfig();
+        initDefaultDev();
+        //        initDevice();
+        serialPort = new SerialPortSpd();
+        edvADPU.clearFocus();
+        //        permission(permiss);
+    }
+
+    private void permission(String[] permiss) {
+        AndPermission.with(this).permission(Manifest.permission.READ_PHONE_STATE).callback(listener).rationale(new RationaleListener() {
+            @Override
+            public void showRequestPermissionRationale(int requestCode, Rationale rationale) {
+                AndPermission.rationaleDialog(Main2Activity.this, rationale).show();
+            }
+        }).start();
+    }
 
     @Override
     protected void onResume() {
@@ -116,17 +139,16 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         } else {
             tvConfig.setText("标准配置：\n");
         }
-        ReadBean.PasmBean pasm = ConfigUtils.readConfig(this).getPasm();
+        psam = ConfigUtils.readConfig(this).getPasm();
         String gpio = "";
-        List<Integer> gpio1 = pasm.getGpio();
+        List<Integer> gpio1 = psam.getGpio();
         for (Integer s : gpio1) {
             gpio += s + ",";
         }
-        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
-                pasm.getPowerType() + " GPIO:" + gpio + " resetGpio:" + pasm.getResetGpio());
-//        tvConfig.append("串口:ttyMT1" + "  波特率：115200" + " gpio:93" + " resetGpio:94");
+        tvConfig.append("串口:" + psam.getSerialPort() + "  波特率：" + psam.getBraut() + " 上电类型:" +
+                psam.getPowerType() + " GPIO:" + gpio + " resetGpio:" + psam.getResetGpio());
+        //        tvConfig.append("串口:ttyMT1" + "  波特率：115200" + " gpio:93" + " resetGpio:94");
     }
-
 
     private void initUI() {
         imgReset = findViewById(R.id.img_reset);
@@ -159,157 +181,61 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         edvADPU.setText("00A404000BA000000003454E45524759");
     }
 
-    String send_data = "";
-    //获取psam实例
-    private IPsam psamIntance = PsamManager.getPsamIntance();
+    private void openFailed(final String msg) {
+        runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              ProgressDialogUtils.dismissProgressDialog();
 
-    private void initDevice() {
+                              new android.support.v7.app.AlertDialog.Builder(Main2Activity.this).setCancelable(false).setMessage("二代证模块初始化失败,请前往调试工具中修改参数" + msg)
+                                      .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+
+                                          @Override
+                                          public void onClick(DialogInterface dialogInterface, int i) {
+                                              openConfig();
+
+                                          }
+                                      }).show();
+                          }
+                      }
+
+        );
+    }
+
+    /**
+     * 打开调试工具  修改配置
+     */
+    private void openConfig() {
+        //打开失败去下载
         try {
-            switch (Build.MODEL) {
-                case "SD55":
-                    psamIntance.initDev("ttyMT1", 115200, this);
-                    deviceControl1 = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 16, 46);
-                    deviceControl1.PowerOnDevice();
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.NEW_MAIN, 23);
-                    break;
-                case "SD55L":
-                    psamIntance.initDev("ttyMT1", 115200, this);
-                    deviceControl1 = new DeviceControlSpd(DeviceControlSpd.PowerType.MAIN, 93);
-                    deviceControl1.PowerOnDevice();
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.MAIN, 94);
-                    break;
-                case "SD60":
-                    psamIntance.initDev("ttyMT1", 115200, this);
-                    deviceControl1 = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 16, 46);
-                    deviceControl1.PowerOnDevice();
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.NEW_MAIN, 23);
-                    break;
-                case "SK80H":
-                    //sk80 psam 1
-//                    psamIntance.initDev("ttyMT1", 115200, this);
-//                    deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN_AND_EXPAND2, 85, 4);
-//                    deviceControl1.PowerOnDevice();
-//                    DeviceControl deviceControl12 = new DeviceControl(DeviceControl.PowerType.EXPAND2);
-//                    deviceControl12.Expand2PowerOff(7);
-//                    psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 12);
+            Intent intent = new Intent();
+            intent.setAction("speedata.config");
+            startActivity(intent);
+        } catch (Exception e) {
+            //            downLoadDeviceApp();
+            new android.support.v7.app.AlertDialog.Builder(this).setCancelable(false).setMessage("请去应用市场下载调试工具进行配置")
+                    .setPositiveButton("确定", null).show();
+        }
 
-                    psamIntance.initDev("ttyMT2", 115200, this);
-                    deviceControl1 = new DeviceControlSpd(DeviceControlSpd.PowerType.MAIN_AND_EXPAND2, 85, 5);
-                    deviceControl1.PowerOnDevice();
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.EXPAND2, 6);
-                    deviceControl1.Expand2PowerOn(6);
-                    break;
-                case "SK80":
-                    //sk80 psam 1
-//                    psamIntance.initDev("ttyMT1", 115200, this);
-//                    deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN_AND_EXPAND2, 85, 4);
-//                    deviceControl1.PowerOnDevice();
-//                    DeviceControl deviceControl13 = new DeviceControl(DeviceControl.PowerType.EXPAND2);
-//                    deviceControl13.Expand2PowerOff(7);
-//                    psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 12);
+    }
 
-                    psamIntance.initDev("ttyMT2", 115200, this);
-                    deviceControl1 = new DeviceControlSpd(DeviceControlSpd.PowerType.MAIN_AND_EXPAND2, 85, 5);
-                    deviceControl1.PowerOnDevice();
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.EXPAND2, 6);
-                    deviceControl1.Expand2PowerOn(6);
+    private void initDefaultDev() {
+        try {
+            psamIntance.initDev(this);
 
-                    break;
-                case "SD100":
-                    tvConfig.setText("串口:ttyHSL0" + "  波特率：115200" + " gpio:psam_open" + " resetGpio:psam_rst_on/off");
-                    psamIntance.initDev("ttyHSL0", 115200, this);
-                    deviceControl1 = new DeviceControlSpd(DeviceControlSpd.POWER_GAOTONG);
-//                    deviceControl1.gtPower("uhf_open");
-//                    deviceControl1.gtPower("open");
-                    deviceControl1.gtPower("psam_open");
-                    deviceControl1.gtPower("psam_rst_on");
-                    deviceControl1.gtPower("psam_rst_off");
-                    deviceControl1.gtPower("psam_rst_on");
-                    break;
-                default:
-                    psamIntance.initDev("ttyMT1", 115200, this);
-                    deviceControl1 = new DeviceControlSpd(DeviceControlSpd.PowerType.MAIN, 93);
-                    deviceControl1.PowerOnDevice();
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.MAIN, 94);
-                    psamIntance.initDev(this);//初始化设备
-//                    psamIntance.resetDev();//复位
-                    break;
-
-            }
-
-            //sk80 psam 1
-//            psamIntance.initDev("ttyMT1", 115200, this);
-//            deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN);
-//            deviceControl1.MainPowerOn(85);
-//            DeviceControl deviceControl12 = new DeviceControl(DeviceControl.PowerType.EXPAND2);
-//            deviceControl12.Expand2PowerOff(7);
-//            control1 = new DeviceControl(DeviceControl.PowerType.EXPAND);
-//            control1.ExpandPowerOn(4);
-//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND, 12);
-
-            //sk80psam2
-//            psamIntance.initDev("ttyMT2", 115200, this);
-//            deviceControl1 = new DeviceControl(DeviceControl.PowerType.MAIN);
-//            deviceControl1.MainPowerOn(85);
-//            DeviceControl deviceControl12 = new DeviceControl(DeviceControl.PowerType.EXPAND2);
-//            deviceControl12.Expand2PowerOff(5);
-//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 6);
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(this, "psam初始化失败！！！", Toast.LENGTH_SHORT).show();
-            System.exit(0);
+            openFailed(e.getMessage());
         }
     }
+
 
     @SuppressLint("SetTextI18n")
     @Override
     public void onClick(View v) {
         if (v == imgReset) {
-            switch (Build.MODEL) {
-                case "SD55":
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.NEW_MAIN, 23);
-                    break;
-                case "SD55L":
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.MAIN, 94);
-                    break;
-                case "SD60":
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.NEW_MAIN, 23);
-                    break;
-                case "SK80H":
-//                    psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 12);
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.EXPAND2, 6);
-                    try {
-                        deviceControl1.Expand2PowerOn(6);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "SK80":
-//                    psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 12);
-
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.EXPAND2, 6);
-                    try {
-                        deviceControl1.Expand2PowerOn(6);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "SD100":
-                    deviceControl1.gtPower("psam_rst_on");
-                    deviceControl1.gtPower("psam_rst_off");
-                    deviceControl1.gtPower("psam_rst_on");
-                    break;
-                default:
-//                    psamIntance.resetDev();
-
-                    psamIntance.resetDev(DeviceControlSpd.PowerType.MAIN, 94);
-                    break;
-
-            }
-            //sk80psam1
-//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND, 12);
-            //sk80 psam2
-//            psamIntance.resetDev(DeviceControl.PowerType.EXPAND2, 6);
+            psamIntance.resetDev();
 
         } else if (v == btn1Activite) {
             psamflag = 1;
@@ -372,11 +298,11 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             }
         } else if (v == btnSendAdpu) {
             String temp_cmd = edvADPU.getText().toString();
-//            if ("".equals(temp_cmd) || temp_cmd.length() % 2 > 0 || temp_cmd.length() < 4) {
-//                Toast.makeText(mContext, "Please enter a valid instruction！", Toast.LENGTH_SHORT)
-//                        .show();
-//                return;
-//            }
+            //            if ("".equals(temp_cmd) || temp_cmd.length() % 2 > 0 || temp_cmd.length() < 4) {
+            //                Toast.makeText(mContext, "Please enter a valid instruction！", Toast.LENGTH_SHORT)
+            //                        .show();
+            //                return;
+            //            }
             send_data = temp_cmd;
             if (psamflag == 1) {
                 tvShowData.setText("Psam1 Send data：\n" + send_data + "\n");
@@ -436,7 +362,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             }
         } else if (v == btnClear) {
             tvShowData.setText("");
-//            test();
+            //            test();
         } else if (v == btnChangeB) {
             CmdDialog();
         } else if (v == btnOpenSerial) {
@@ -448,8 +374,6 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         }
 
     }
-
-    int yourChoice;
 
     private void showSingleChoiceDialog(final String temp_cmd) {
         final String[] items = {"上电", "下电", "读卡", "写卡", "读密", "核密", "修密"};
@@ -590,18 +514,18 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                     public void onClick(DialogInterface dialog, int which) {
                         if (!botelv.getText().toString().equals("") && !cmds.getText().toString().equals("")) {
                             int b = Integer.parseInt(botelv.getText().toString());
-//                            int b = Integer.parseInt(cmds.getText().toString());
+                            //                            int b = Integer.parseInt(cmds.getText().toString());
                             try {
-//                            deviceControl = new DeviceControl2(DeviceControl2.PowerType.MAIN, 96);
+                                //                            deviceControl = new DeviceControl2(DeviceControl2.PowerType.MAIN, 96);
                                 String ss = "aa bb 06 00 00 00 01 01 " + cmds.getText().toString() + " " + cmds.getText().toString();
-//                byte[] dd = DataConversionUtils.HexString2Bytes(ss);
-//                byte[] ssss = new byte[]{0x00,0x00,0x01,0x05,0x05};
-//                byte tmp=0;
-//                for (int i = 0; i < ssss.length; i++) {
-//                     tmp^=ssss[i];
-//                }
+                                //                byte[] dd = DataConversionUtils.HexString2Bytes(ss);
+                                //                byte[] ssss = new byte[]{0x00,0x00,0x01,0x05,0x05};
+                                //                byte tmp=0;
+                                //                for (int i = 0; i < ssss.length; i++) {
+                                //                     tmp^=ssss[i];
+                                //                }
                                 serialPort.OpenSerial(SerialPortSpd.SERIAL_TTYMT3, b);
-//                            deviceControl.PowerOnDevice();
+                                //                            deviceControl.PowerOnDevice();
                                 serialPort.WriteSerialByte(serialPort.getFd(), DataConversionUtils.HexString2Bytes(ss));
                                 byte[] sss = serialPort.ReadSerial(serialPort.getFd(), 512);
                                 if (sss != null) {
@@ -622,29 +546,14 @@ public class Main2Activity extends Activity implements View.OnClickListener {
 
     }
 
-    /**
-     * 截取数组
-     *
-     * @param bytes  被截取数组
-     * @param start  被截取数组开始截取位置
-     * @param length 新数组的长度
-     * @return 新数组
-     */
-    public static byte[] cutBytes(byte[] bytes, int start, int length) {
-        byte[] res = new byte[length];
-        System.arraycopy(bytes, start, res, 0, length);
-        return res;
-    }
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
             if (deviceControl1 != null) {
                 if (Build.MODEL.equals("SD100")) {
-//                    deviceControl1.gtPower("uhf_close");
-//                    deviceControl1.gtPower("close");
+                    //                    deviceControl1.gtPower("uhf_close");
+                    //                    deviceControl1.gtPower("close");
                     deviceControl1.gtPower("psam_close");
                     deviceControl1.gtPower("psam_rst_off");
                 } else {
