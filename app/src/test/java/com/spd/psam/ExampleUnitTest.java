@@ -1,4 +1,4 @@
-package com.cc3310;
+package com.spd.psam;
 
 import org.junit.Test;
 
