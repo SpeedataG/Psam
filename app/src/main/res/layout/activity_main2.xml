@@ -15,10 +15,10 @@
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="SPDPSAMDEMO"
-            android:textColor="@color/blue_button"
             android:layout_weight="1"
             android:gravity="center"
+            android:text="SPDPSAMDEMO"
+            android:textColor="@color/blue_button"
             android:textSize="25dp" />
 
         <TextView
@@ -48,6 +48,7 @@
             android:id="@+id/img_reset"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:drawableTop="@mipmap/reset"
             android:gravity="center"
             android:text="rest" />
@@ -56,8 +57,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1.5"
-       >
+        android:layout_weight="1.5">
 
         <ScrollView
             android:layout_width="match_parent"

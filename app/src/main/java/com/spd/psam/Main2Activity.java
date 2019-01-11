@@ -80,13 +80,9 @@ public class Main2Activity extends Activity implements View.OnClickListener {
     /**
      * 截取数组
      *
-     * @param bytes
-     *         被截取数组
-     * @param start
-     *         被截取数组开始截取位置
-     * @param length
-     *         新数组的长度
-     *
+     * @param bytes  被截取数组
+     * @param start  被截取数组开始截取位置
+     * @param length 新数组的长度
      * @return 新数组
      */
     public static byte[] cutBytes(byte[] bytes, int start, int length) {
@@ -103,7 +99,6 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         initUI();
         showConfig();
         initDefaultDev();
-        //        initDevice();
         serialPort = new SerialPortSpd();
         edvADPU.clearFocus();
         //        permission(permiss);
@@ -147,7 +142,6 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         }
         tvConfig.append("串口:" + psam.getSerialPort() + "  波特率：" + psam.getBraut() + " 上电类型:" +
                 psam.getPowerType() + " GPIO:" + gpio + " resetGpio:" + psam.getResetGpio());
-        //        tvConfig.append("串口:ttyMT1" + "  波特率：115200" + " gpio:93" + " resetGpio:94");
     }
 
     private void initUI() {
@@ -187,7 +181,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                           public void run() {
                               ProgressDialogUtils.dismissProgressDialog();
 
-                              new android.support.v7.app.AlertDialog.Builder(Main2Activity.this).setCancelable(false).setMessage("二代证模块初始化失败,请前往调试工具中修改参数" + msg)
+                              new AlertDialog.Builder(Main2Activity.this).setCancelable(false).setMessage("PSAM模块初始化失败,请前往调试工具中修改参数" + msg)
                                       .setPositiveButton("确定", new DialogInterface.OnClickListener() {
 
 
@@ -214,7 +208,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             startActivity(intent);
         } catch (Exception e) {
             //            downLoadDeviceApp();
-            new android.support.v7.app.AlertDialog.Builder(this).setCancelable(false).setMessage("请去应用市场下载调试工具进行配置")
+            new AlertDialog.Builder(this).setCancelable(false).setMessage("请去应用市场下载调试工具进行配置")
                     .setPositiveButton("确定", null).show();
         }
 
@@ -223,7 +217,9 @@ public class Main2Activity extends Activity implements View.OnClickListener {
     private void initDefaultDev() {
         try {
             psamIntance.initDev(this);
-
+//            psamIntance.initDev("ttyMT1",115200, DeviceControlSpd.PowerType.NEW_MAIN,Main2Activity.this,75,74);
+//            psamIntance.resetDev(DeviceControlSpd.PowerType.NEW_MAIN,74);
+            psamIntance.releaseDev();
         } catch (IOException e) {
             e.printStackTrace();
             openFailed(e.getMessage());
