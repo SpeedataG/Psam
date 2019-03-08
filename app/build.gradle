@@ -9,7 +9,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 28
 //        versionCode 1
-        versionName "1.3.4"
+        versionName "1.3.8"
         ndk {
             abiFilters 'armeabi'
 //            ldLibs "log"//实现__android_log_print
@@ -35,5 +35,5 @@ dependencies {
     implementation 'com.umeng.analytics:analytics:6.1.4'
     implementation project(':psam')
     implementation 'com.github.SpeedataG:Device:1.6.4'
-    implementation 'com.speedata:psam:1.5.4'
+//    implementation 'com.speedata:psam:1.5.4'
 }

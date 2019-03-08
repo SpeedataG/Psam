@@ -36,11 +36,8 @@ public class Psam3310Realize implements IPsam {
     private DeviceControlSpd mDeviceReset = null;
 
     /**
-     * @param cmd
-     *         adpu指令
-     * @param type
-     *         0x13卡1 0x23卡2
-     *
+     * @param cmd  adpu指令
+     * @param type 0x13卡1 0x23卡2
      * @return 3310格式指令
      */
     public static byte[] adpuPackages(byte[] cmd, PowerType type) {
@@ -120,7 +117,6 @@ public class Psam3310Realize implements IPsam {
      * psam软上电
      *
      * @param type
-     *
      * @return
      */
     @Override
@@ -199,7 +195,7 @@ public class Psam3310Realize implements IPsam {
                     List<Integer> gtGpio = pasm.getGpio();
                     String[] gpios = new String[gtGpio.size()];
                     for (int i = 0; i < gtGpio.size(); i++) {
-                        gpios[i] = gtGpio.get(i)+"";
+                        gpios[i] = gtGpio.get(i) + "";
                     }
                     mDeviceControlSpd = new DeviceControlSpd(DeviceControlSpd.POWER_GAOTONG, gpios);
                     mDeviceControlSpd.PowerOnDevice();
@@ -230,13 +226,9 @@ public class Psam3310Realize implements IPsam {
     /**
      * 此指令大概20ms左右
      *
-     * @param data
-     *         写入指令
-     * @param type
-     *         卡类型
-     *
+     * @param data 写入指令
+     * @param type 卡类型
      * @return
-     *
      * @throws UnsupportedEncodingException
      */
     @Override
@@ -293,7 +285,9 @@ public class Psam3310Realize implements IPsam {
     public void releaseDev() throws IOException {
         mSerialPort.CloseSerial(fd);
         if (fla) {
-            mDeviceControlSpd.PowerOffDevice();
+            if (mDeviceControlSpd != null) {
+                mDeviceControlSpd.PowerOffDevice();
+            }
         }
         if (mDeviceReset != null) {
             mDeviceReset.PowerOffDevice();
@@ -313,7 +307,6 @@ public class Psam3310Realize implements IPsam {
             e.printStackTrace();
         }
     }
-
 
 
     @Override
@@ -342,7 +335,6 @@ public class Psam3310Realize implements IPsam {
      *
      * @param cmd
      * @param type
-     *
      * @return 返回不同结果
      */
     private byte[] psam4442Packages(byte[] cmd, PowerType type) {

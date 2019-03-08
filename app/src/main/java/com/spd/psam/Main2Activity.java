@@ -83,6 +83,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         initDefaultDev();
         serialPort = new SerialPortSpd();
         edvADPU.clearFocus();
+        permission();
     }
 
     @Override
@@ -102,9 +103,9 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         tvVerson.setText("V:" + verson);
         boolean isExit = ConfigUtils.isConfigFileExists();
         if (isExit) {
-            tvConfig.setText("定制配置：\n");
+            tvConfig.setText(getResources().getString(R.string.custom_config));
         } else {
-            tvConfig.setText("标准配置：\n");
+            tvConfig.setText(getResources().getString(R.string.standard_config));
         }
         psam = ConfigUtils.readConfig(this).getPasm();
         String gpio = "";
@@ -112,8 +113,8 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         for (Integer s : gpio1) {
             gpio += s + ",";
         }
-        tvConfig.append("串口:" + psam.getSerialPort() + "  波特率：" + psam.getBraut() + " 上电类型:" +
-                psam.getPowerType() + " GPIO:" + gpio + " resetGpio:" + psam.getResetGpio());
+        tvConfig.append(getResources().getString(R.string.serialport) + psam.getSerialPort() + getResources().getString(R.string.baudrate) + psam.getBraut() + getResources().getString(R.string.type_power) +
+                psam.getPowerType() + getResources().getString(R.string.gpio) + gpio + getResources().getString(R.string.reset_gpio) + psam.getResetGpio());
     }
 
     private void initUI() {
@@ -145,6 +146,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         tvShowData.setMovementMethod(ScrollingMovementMethod.getInstance());
         edvADPU = findViewById(R.id.edv_adpu_cmd);
         edvADPU.setText("00A404000BA000000003454E45524759");
+
     }
 
     private void openFailed(final String msg) {
@@ -153,10 +155,8 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                           public void run() {
                               ProgressDialogUtils.dismissProgressDialog();
 
-                              new AlertDialog.Builder(Main2Activity.this).setCancelable(false).setMessage("PSAM模块初始化失败,请前往调试工具中修改参数" + msg)
-                                      .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-
-
+                              new AlertDialog.Builder(Main2Activity.this).setCancelable(false).setMessage(getResources().getString(R.string.msg_init_fail) + msg)
+                                      .setPositiveButton(getResources().getString(R.string.btn_ok), new DialogInterface.OnClickListener() {
                                           @Override
                                           public void onClick(DialogInterface dialogInterface, int i) {
                                               openConfig();
@@ -169,6 +169,31 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         );
     }
 
+    private void permission() {
+        AndPermission.with(this).permission(Manifest.permission.READ_EXTERNAL_STORAGE).callback(listener).rationale(new RationaleListener() {
+            @Override
+            public void showRequestPermissionRationale(int requestCode, Rationale rationale) {
+                AndPermission.rationaleDialog(Main2Activity.this, rationale).show();
+            }
+        }).start();
+    }
+
+    PermissionListener listener = new PermissionListener() {
+        @Override
+        public void onSucceed(int requestCode, @NonNull List<String> grantPermissions) {
+
+        }
+
+        @Override
+        public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
+            // 用户否勾选了不再提示并且拒绝了权限，那么提示用户到设置中授权。
+            if (AndPermission.hasAlwaysDeniedPermission(Main2Activity.this, deniedPermissions)) {
+                AndPermission.defaultSettingDialog(Main2Activity.this, 300).show();
+            }
+        }
+    };
+
+
     /**
      * 打开调试工具  修改配置
      */
@@ -180,8 +205,8 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             startActivity(intent);
         } catch (Exception e) {
             //            downLoadDeviceApp();
-            new AlertDialog.Builder(this).setCancelable(false).setMessage("请去应用市场下载调试工具进行配置")
-                    .setPositiveButton("确定", null).show();
+            new AlertDialog.Builder(this).setCancelable(false).setMessage(getResources().getString(R.string.msg_open_fail))
+                    .setPositiveButton(getResources().getString(R.string.btn_ok), null).show();
         }
 
     }
@@ -189,8 +214,8 @@ public class Main2Activity extends Activity implements View.OnClickListener {
     private void initDefaultDev() {
         try {
             psamIntance.initDev(this);
-//            psamIntance.initDev("ttyMT1",115200, DeviceControlSpd.PowerType.NEW_MAIN,Main2Activity.this,75,74);
-//            psamIntance.resetDev(DeviceControlSpd.PowerType.NEW_MAIN,74);
+//            psamIntance.initDev("ttyMT1",115200, DeviceControlSpd.PowerType.NEW_MAIN,Main2Activity.this,16);
+//            psamIntance.resetDev(DeviceControlSpd.PowerType.NEW_MAIN,23);
             psamIntance.resetDev();
         } catch (IOException e) {
             e.printStackTrace();
@@ -209,41 +234,41 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             psamflag = 1;
             byte[] data = psamIntance.PsamPower(IPsam.PowerType.Psam1);
             if (data != null) {
-                tvShowData.setText("Psam1 activite \n" + DataConversionUtils.byteArrayToString
+                tvShowData.setText(getResources().getString(R.string.psam1_activite) + DataConversionUtils.byteArrayToString
                         (data));
             } else {
-                tvShowData.setText("failed");
+                tvShowData.setText(getResources().getString(R.string.failed));
             }
         } else if (v == btn2Activite) {
             psamflag = 2;
             byte[] data = psamIntance.PsamPower(IPsam.PowerType.Psam2);
             if (data != null) {
-                tvShowData.setText("Psam2 activite \n" + DataConversionUtils.byteArrayToString
+                tvShowData.setText(getResources().getString(R.string.psam2_activite) + DataConversionUtils.byteArrayToString
                         (data));
             } else {
-                tvShowData.setText("failed");
+                tvShowData.setText(getResources().getString(R.string.failed));
             }
         } else if (v == btnPsam4442) {
             psamflag = 3;
             byte[] data = psamIntance.PsamPower(IPsam.PowerType.Psam4442On);
             if (data != null) {
-                tvShowData.setText("Psam2 activite \n" + DataConversionUtils.byteArrayToString
+                tvShowData.setText(getResources().getString(R.string.psam2_activite) + DataConversionUtils.byteArrayToString
                         (data));
             } else {
-                tvShowData.setText("failed");
+                tvShowData.setText(getResources().getString(R.string.failed));
             }
 
         } else if (v == btnGetRomdan) {
             if (psamflag == 1) {
 
                 try {
-                    tvShowData.setText("Psam1 Send data：00 84 00 00 04\n");
+                    tvShowData.setText(getResources().getString(R.string.psam1_send) + "00 84 00 00 04\n");
                     byte[] data = psamIntance.WriteCmd(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
                             0x04}, IPsam
                             .PowerType.Psam1);
                     if (data != null) {
 
-                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                        tvShowData.append(getResources().getString(R.string.psam_rece) + DataConversionUtils.byteArrayToString(data));
                     } else {
                         return;
                     }
@@ -253,12 +278,12 @@ public class Main2Activity extends Activity implements View.OnClickListener {
 
             } else if (psamflag == 2) {
                 try {
-                    tvShowData.setText("Psam2 Send data：00 84 00 00 08\n");
+                    tvShowData.setText(getResources().getString(R.string.psam2_send) + "00 84 00 00 08\n");
                     byte[] data = psamIntance.WriteCmd(new byte[]{0x00, (byte) 0x84, 0x00, 0x00,
                             0x08}, IPsam
                             .PowerType.Psam2);
                     if (data != null) {
-                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                        tvShowData.append(getResources().getString(R.string.psam_rece) + DataConversionUtils.byteArrayToString(data));
                     }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -273,24 +298,24 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             //            }
             send_data = temp_cmd;
             if (psamflag == 1) {
-                tvShowData.setText("Psam1 Send data：\n" + send_data + "\n");
+                tvShowData.setText(getResources().getString(R.string.psam1_send) + "\n" + send_data + "\n");
                 try {
                     byte[] data = psamIntance.WriteCmd(DataConversionUtils
                             .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
                     if (data != null) {
-                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                        tvShowData.append(getResources().getString(R.string.psam_rece) + DataConversionUtils.byteArrayToString(data));
                     }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
 
             } else if (psamflag == 2) {
-                tvShowData.setText("Psam2 Send data：\n" + send_data + "\n");
+                tvShowData.setText(getResources().getString(R.string.psam2_send) + "\n" + send_data + "\n");
                 try {
                     byte[] data = psamIntance.WriteCmd(DataConversionUtils
                             .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
                     if (data != null) {
-                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                        tvShowData.append(getResources().getString(R.string.psam_rece) + DataConversionUtils.byteArrayToString(data));
                     }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -299,30 +324,30 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         } else if (v == btnOriginalCmd) {
             String temp_cmd = edvADPU.getText().toString();
             if ("".equals(temp_cmd) || temp_cmd.length() % 2 > 0 || temp_cmd.length() < 4) {
-                Toast.makeText(mContext, "Please enter a valid instruction！", Toast.LENGTH_SHORT)
+                Toast.makeText(mContext, getResources().getString(R.string.toast1), Toast.LENGTH_SHORT)
                         .show();
                 return;
             }
             send_data = temp_cmd;
             if (psamflag == 1) {
-                tvShowData.setText("Psam1 Send data：\n" + send_data + "\n");
+                tvShowData.setText(getResources().getString(R.string.psam1_send) + "\n" + send_data + "\n");
                 try {
                     byte[] data = psamIntance.WriteOriginalCmd(DataConversionUtils
                             .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam1);
                     if (data != null) {
-                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                        tvShowData.append(getResources().getString(R.string.psam_rece) + DataConversionUtils.byteArrayToString(data));
                     }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
 
             } else if (psamflag == 2) {
-                tvShowData.setText("Psam2 Send data：\n" + send_data + "\n");
+                tvShowData.setText(getResources().getString(R.string.psam2_send) + "\n" + send_data + "\n");
                 try {
                     byte[] data = psamIntance.WriteOriginalCmd(DataConversionUtils
                             .HexString2Bytes(temp_cmd), IPsam.PowerType.Psam2);
                     if (data != null) {
-                        tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
+                        tvShowData.append(getResources().getString(R.string.psam_rece) + DataConversionUtils.byteArrayToString(data));
                     }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -336,7 +361,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         } else if (v == btnOpenSerial) {
             OpenSerialDialog();
         } else if (v == btn4442Cmd) {
-            tvShowData.setText("Psam2 Send data：\n" + send_data + "\n");
+            tvShowData.setText(getResources().getString(R.string.psam2_send) + "\n" + send_data + "\n");
             String temp_cmd = edvADPU.getText().toString();
             showSingleChoiceDialog(temp_cmd);
         }
@@ -344,11 +369,11 @@ public class Main2Activity extends Activity implements View.OnClickListener {
     }
 
     private void showSingleChoiceDialog(final String temp_cmd) {
-        final String[] items = {"上电", "下电", "读卡", "写卡", "读密", "核密", "修密"};
+        final String[] items = {getResources().getString(R.string.power_on), getResources().getString(R.string.power_off), getResources().getString(R.string.read_card), getResources().getString(R.string.write_card), getResources().getString(R.string.read_password), getResources().getString(R.string.check_password), getResources().getString(R.string.update_password)};
         yourChoice = -1;
         AlertDialog.Builder singleChoiceDialog =
                 new AlertDialog.Builder(Main2Activity.this);
-        singleChoiceDialog.setTitle("4442卡片指令");
+        singleChoiceDialog.setTitle(getResources().getString(R.string.cmd_4442));
         // 第二个参数是默认选项，此处设置为0
         singleChoiceDialog.setSingleChoiceItems(items, -1,
                 new DialogInterface.OnClickListener() {
@@ -357,7 +382,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                         yourChoice = which;
                     }
                 });
-        singleChoiceDialog.setPositiveButton("确定",
+        singleChoiceDialog.setPositiveButton(getResources().getString(R.string.btn_ok),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -427,7 +452,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                                 tvShowData.append("rece->" + DataConversionUtils.byteArrayToString(data));
                             } else {
                                 Toast.makeText(Main2Activity.this,
-                                        "请检查指令",
+                                        getResources().getString(R.string.cmd_check),
                                         Toast.LENGTH_SHORT).show();
                             }
                         }
@@ -443,9 +468,9 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                 .inflate(R.layout.dialog_change_layout, null);
 
         final EditText botelv = dialogView.findViewById(R.id.botelv);
-        customizeDialog.setTitle("打开新串口");
+        customizeDialog.setTitle(getResources().getString(R.string.open_new));
         customizeDialog.setView(dialogView);
-        customizeDialog.setPositiveButton("打开",
+        customizeDialog.setPositiveButton(getResources().getString(R.string.open),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -456,7 +481,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                                     serialPort.CloseSerial(serialPort.getFd());
                                 }
                                 serialPort.OpenSerial(SerialPortSpd.SERIAL_TTYMT3, b);
-                                Toast.makeText(mContext, "新串口已打开", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mContext, getResources().getString(R.string.opened_new), Toast.LENGTH_SHORT).show();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -474,9 +499,9 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                 .inflate(R.layout.layout, null);
         final EditText botelv = (EditText) dialogView.findViewById(R.id.b);
         final EditText cmds = (EditText) dialogView.findViewById(R.id.cmd);
-        customizeDialog.setTitle("更改串口參數");
+        customizeDialog.setTitle(getResources().getString(R.string.update_serial));
         customizeDialog.setView(dialogView);
-        customizeDialog.setPositiveButton("确定修改",
+        customizeDialog.setPositiveButton(getResources().getString(R.string.sure_update),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -498,11 +523,11 @@ public class Main2Activity extends Activity implements View.OnClickListener {
                                 byte[] sss = serialPort.ReadSerial(serialPort.getFd(), 512);
                                 if (sss != null) {
                                     if (Arrays.equals(new byte[]{0x00}, cutBytes(sss, 8, 1))) {
-                                        Toast.makeText(mContext, "成功", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(mContext, getResources().getString(R.string.success), Toast.LENGTH_SHORT).show();
                                     }
                                 } else {
 
-                                    Toast.makeText(mContext, "切换失败", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(mContext, getResources().getString(R.string.switch_fail), Toast.LENGTH_SHORT).show();
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -543,7 +568,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
             return version;
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
-            return "版本号错误";
+            return getResources().getString(R.string.version_error);
         }
     }
 
