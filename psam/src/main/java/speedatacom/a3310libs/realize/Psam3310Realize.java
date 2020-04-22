@@ -164,12 +164,12 @@ public class Psam3310Realize implements IPsam {
         } else {
             mSerialPort = new SerialPortSpd();
             //        try {
-            ReadBean.PasmBean pasm = readBean.getPasm();
-            mSerialPort.OpenSerial(pasm.getSerialPort(), pasm.getBraut());
-            resetGpio = pasm.getResetGpio();
+            ReadBean.PsamBean psam = readBean.getPsam();
+            mSerialPort.OpenSerial(psam.getSerialPort(), psam.getBraut());
+            resetGpio = psam.getResetGpio();
             fd = mSerialPort.getFd();
             logger.d("--onCreate--open-serial=" + fd);
-            String type = pasm.getPowerType();
+            String type = psam.getPowerType();
 
             switch (type) {
                 case "MAIN":
@@ -192,7 +192,7 @@ public class Psam3310Realize implements IPsam {
                     break;
                 case "GAOTONG_MAIN":
                     this.power_type = DeviceControlSpd.PowerType.GAOTONG_MAIN;
-                    List<Integer> gtGpio = pasm.getGpio();
+                    List<Integer> gtGpio = psam.getGpio();
                     String[] gpios = new String[gtGpio.size()];
                     for (int i = 0; i < gtGpio.size(); i++) {
                         gpios[i] = gtGpio.get(i) + "";
@@ -204,7 +204,7 @@ public class Psam3310Realize implements IPsam {
                     power_type = DeviceControlSpd.PowerType.MAIN;
                     break;
             }
-            List<Integer> gpio = pasm.getGpio();
+            List<Integer> gpio = psam.getGpio();
             int[] gpios = new int[gpio.size()];
             for (int i = 0; i < gpio.size(); i++) {
                 gpios[i] = gpio.get(i);

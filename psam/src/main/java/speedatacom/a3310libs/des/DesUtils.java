@@ -188,7 +188,6 @@ public class DesUtils {
 	/**
 	 * des加密算法，ECB方式，NoPadding模式，数据字节必须是8的整数倍
 	 * @param key
-	 * @param data 数据字节必须是8的整数倍
 	 * @return 加密结果
 	 * @throws GeneralSecurityException
 	 */
@@ -203,7 +202,6 @@ public class DesUtils {
 	/**
 	 * des解密算法，ECB方式，NoPadding模式，数据字节必须是8的整数倍
 	 * @param key 秘钥
-	 * @param data 数据字节必须是8的整数倍
 	 * @throws GeneralSecurityException
 	 * @return
 	 */
@@ -240,8 +238,9 @@ public class DesUtils {
 	 */
 	public static byte[] xOr(byte[] b1, byte[] b2) {
 		byte[] tXor = new byte[Math.min(b1.length, b2.length)];
-		for (int i = 0; i < tXor.length; i++)
+		for (int i = 0; i < tXor.length; i++) {
 			tXor[i] = (byte) (b1[i] ^ b2[i]); // 异或(Xor)
+		}
 		return tXor;
 	}
 

@@ -34,6 +34,6 @@ dependencies {
     //友盟sdk添加
     implementation 'com.umeng.analytics:analytics:6.1.4'
     implementation project(':psam')
-    implementation 'com.github.SpeedataG:Device:1.6.6'
+    implementation 'com.github.SpeedataG:Device:1.6.9'
 //    implementation 'com.speedata:psam:1.5.4'
 }

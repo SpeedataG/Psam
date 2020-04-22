@@ -41,7 +41,7 @@ import speedatacom.a3310libs.PsamManager;
 import speedatacom.a3310libs.inf.IPsam;
 
 public class Main2Activity extends Activity implements View.OnClickListener {
-    public ReadBean.PasmBean psam;
+    public ReadBean.PsamBean psam;
     String send_data = "";
     int yourChoice;
     private Button btn1Activite, btn2Activite, btnGetRomdan,
@@ -107,7 +107,7 @@ public class Main2Activity extends Activity implements View.OnClickListener {
         } else {
             tvConfig.setText(getResources().getString(R.string.standard_config));
         }
-        psam = ConfigUtils.readConfig(this).getPasm();
+        psam = ConfigUtils.readConfig(this).getPsam();
         String gpio = "";
         List<Integer> gpio1 = psam.getGpio();
         for (Integer s : gpio1) {

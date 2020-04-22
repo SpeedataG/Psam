@@ -52,10 +52,12 @@ public class Pboc3DesMACUtils {
     public static byte[] calculatePboc3desMAC(byte[] data, byte[] key,
                                               byte[] icv) throws Exception {
 
-        if (key == null || data == null)
+        if (key == null || data == null) {
             throw new RuntimeException("data or key is null.");
-        if (key.length != 16)
+        }
+        if (key.length != 16) {
             throw new RuntimeException("key length is not 16 byte.");
+        }
 
         byte[] leftKey = new byte[8];
         System.arraycopy(key, 0, leftKey, 0, 8);
